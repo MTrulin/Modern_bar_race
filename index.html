@@ -277,12 +277,12 @@
 
     .bar-name {
       font-family: var(--font-mono);
-      font-size: 15px;
-      font-weight: 600;
+      font-size: 18.5px;
+      font-weight: 500;
       color: var(--text-inside-bar);
       white-space: nowrap;
-      padding-right: 6px;
-      padding-left: 4px;
+      padding-right: 8px;
+      padding-left: 6px;
       letter-spacing: -0.4px;
       line-height: 1;
     }
@@ -343,7 +343,7 @@
     .timeline-footer {
       height: 60px;
       flex-shrink: 0;
-      padding: 4px 16px 8px 14px;
+      padding: 4px 24px 8px 14px;
       display: flex;
       align-items: flex-start;
       gap: 10px;
@@ -842,7 +842,7 @@
       if (n <= 1) return;
 
       // On the narrower mobile portrait timeline, space major labels every 2 or 3 ticks cleanly
-      const labelStep = n <= 8 ? 1 : (n <= 16 ? 2 : (n <= 26 ? 3 : 4));
+      const labelStep = n <= 6 ? 1 : (n <= 11 ? 2 : (n <= 20 ? 3 : 4));
 
       appData.DatesNormalized.forEach((dLabel, idx) => {
         const pct = (idx / (n - 1)) * 100;
@@ -976,11 +976,11 @@
 
         // Auto-fit font size inside bar so every player's full name is always readable on the vertical mobile layout
         const barPx = (widthPct / 100) * trackWidth;
-        const maxFontSize = 15.0;
-        const charFactor = 0.57;
-        const availableTextPx = Math.max(32, barPx - 10);
+        const maxFontSize = 18.0;
+        const charFactor = 0.58;
+        const availableTextPx = Math.max(32, barPx - 12);
         const idealFont = (availableTextPx / Math.max(1, item.name.length)) / charFactor;
-        const fittedFont = Math.max(9.5, Math.min(maxFontSize, idealFont));
+        const fittedFont = Math.max(10.0, Math.min(maxFontSize, idealFont));
         dom.nameSpan.style.fontSize = `${fittedFont.toFixed(1)}px`;
 
         if (isVisible) {
@@ -1023,7 +1023,7 @@
       const W = 450; // Logical mobile card width
       const H = 800; // Logical mobile card height (9:16 aspect ratio)
       const scale = exportCanvas.width / W; // 720 / 450 = 1.6x HD scale
-      const monoFont = "'JetBrains Mono', 'Fira Code', Consolas, 'Liberation Mono', monospace";
+      const monoFont = "'JetBrains Mono', 'Fira Code', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace";
 
       ctx.save();
       ctx.setTransform(scale, 0, 0, scale, 0, 0);
@@ -1092,16 +1092,16 @@
         ctx.rect(xLeft, y, barW, BAR_HEIGHT);
         ctx.clip();
 
-        const charFactor = 0.57;
-        const availableTextPx = Math.max(32, barW - 10);
+        const charFactor = 0.58;
+        const availableTextPx = Math.max(32, barW - 12);
         const idealFont = (availableTextPx / Math.max(1, item.name.length)) / charFactor;
-        const fittedFont = Math.max(9.5, Math.min(15.0, idealFont));
+        const fittedFont = Math.max(10.0, Math.min(18.0, idealFont));
 
         ctx.fillStyle = '#141619';
-        ctx.font = `600 ${fittedFont.toFixed(1)}px ${monoFont}`;
+        ctx.font = `500 ${fittedFont.toFixed(1)}px ${monoFont}`;
         ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
-        ctx.fillText(item.name, xLeft + barW - 6, y + BAR_HEIGHT / 2 + 0.5);
+        ctx.fillText(item.name, xLeft + barW - 8, y + BAR_HEIGHT / 2 + 0.5);
         ctx.restore();
 
         // Score outside bar
@@ -1184,7 +1184,7 @@
 
       // Scrubber track
       const scrubLeft = 56;
-      const scrubRight = W - 22;
+      const scrubRight = W - 26;
       const scrubW = scrubRight - scrubLeft;
       const scrubY = footerTop + 19;
 
@@ -1203,7 +1203,7 @@
       // Scrubber ticks & labels
       const n = appData.DatesNormalized.length;
       if (n > 1) {
-        const labelStep = n <= 8 ? 1 : (n <= 16 ? 2 : (n <= 26 ? 3 : 4));
+        const labelStep = n <= 6 ? 1 : (n <= 11 ? 2 : (n <= 20 ? 3 : 4));
         appData.DatesNormalized.forEach((dLabel, idx) => {
           const tx = scrubLeft + (idx / (n - 1)) * scrubW;
           const isLast = (idx === n - 1);
@@ -1216,9 +1216,9 @@
           if (isMajor) {
             ctx.fillStyle = '#d1d5db';
             ctx.font = `600 9.5px ${monoFont}`;
-            ctx.textAlign = isLast ? 'right' : (idx === 0 ? 'left' : 'center');
+            ctx.textAlign = 'center';
             ctx.textBaseline = 'top';
-            ctx.fillText(dLabel, isLast ? tx + 4 : (idx === 0 ? tx - 4 : tx), scrubY + 13);
+            ctx.fillText(dLabel, tx, scrubY + 13);
           }
         });
       }
