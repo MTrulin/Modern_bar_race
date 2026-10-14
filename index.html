@@ -1,0 +1,1627 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rank Modern — Bar Chart Race (PRI_Teste)</title>
+  <style>
+    :root {
+      --bg-page: #141518;
+      --bg-card: #25262b;
+      --border-card: #dcdcdc;
+      --bar-bora: #46b9ac;
+      --bar-bora-glow: rgba(70, 185, 172, 0.35);
+      --bar-other: #d36566;
+      --cutoff-orange: #dba74e;
+      --text-white: #f8f9fa;
+      --text-muted: #9ca3af;
+      --text-inside-bar: #141619;
+      --grid-line: rgba(255, 255, 255, 0.22);
+      --font-mono: 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      --font-sans: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-page);
+      color: var(--text-white);
+      font-family: var(--font-mono);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 20px 16px 40px;
+    }
+
+    /* Top Control Bar (outside the video-style frame) */
+    .top-toolbar {
+      width: 100%;
+      max-width: 820px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding: 10px 14px;
+      background: #1e2025;
+      border: 1px solid #343740;
+      border-radius: 8px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+    }
+
+    .toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .legend-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #e5e7eb;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 4px 9px;
+      border-radius: 999px;
+    }
+
+    .legend-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 2px;
+      display: inline-block;
+    }
+
+    .btn-tool {
+      background: #2e3138;
+      color: #f3f4f6;
+      border: 1px solid #454954;
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .btn-tool:hover {
+      background: #3a3e47;
+      border-color: #606675;
+    }
+
+    .btn-tool.active {
+      background: rgba(70, 185, 172, 0.2);
+      border-color: var(--bar-bora);
+      color: #6ee7d8;
+    }
+
+    .btn-tool.btn-video {
+      background: rgba(70, 185, 172, 0.16);
+      border-color: rgba(70, 185, 172, 0.55);
+      color: #5eead4;
+      font-weight: 600;
+    }
+
+    .btn-tool.btn-video:hover {
+      background: rgba(70, 185, 172, 0.28);
+      border-color: var(--bar-bora);
+    }
+
+    .btn-tool.btn-video.recording {
+      background: rgba(211, 101, 102, 0.25);
+      border-color: #f87171;
+      color: #fca5a5;
+    }
+
+    select.speed-select {
+      background: #2e3138;
+      color: #f3f4f6;
+      border: 1px solid #454954;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    /* Main Race Card — Exact Video Dimensions & Styling */
+    .race-card {
+      width: 100%;
+      max-width: 820px;
+      background-color: var(--bg-card);
+      border: 2px solid var(--border-card);
+      position: relative;
+      user-select: none;
+      overflow: hidden;
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.55);
+    }
+
+    .card-header {
+      height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 0 18px;
+      border-bottom: 1.5px solid var(--border-card);
+    }
+
+    .card-title {
+      font-family: var(--font-mono);
+      font-size: 19px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.3px;
+    }
+
+    /* Chart Body */
+    .chart-stage {
+      position: relative;
+      height: 668px;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    /* Top X-Axis Ticks & Vertical Gridlines (shared horizontal coordinate system with .bars-layer) */
+    .axis-layer {
+      position: absolute;
+      top: 0;
+      left: 18px;
+      right: 76px; /* Right margin reserved for score numbers outside the 100% bar */
+      bottom: 0;
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    .axis-tick {
+      position: absolute;
+      top: 12px;
+      bottom: 38px;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .axis-tick-label {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: #f1f3f5;
+      margin-bottom: 6px;
+      line-height: 1;
+    }
+
+    .axis-tick-line {
+      width: 1px;
+      flex: 1;
+      background: var(--grid-line);
+    }
+
+    /* Bars Container (identical left/right bounds as .axis-layer so bar lengths match axis 1:1) */
+    .bars-layer {
+      position: absolute;
+      top: 40px;
+      left: 18px;
+      right: 76px;
+      bottom: 38px;
+      z-index: 2;
+    }
+
+    .bar-row {
+      position: absolute;
+      left: 0;
+      right: 0;
+      width: 100%;
+      height: 35px;
+      display: flex;
+      align-items: center;
+      will-change: transform, opacity;
+      transition: opacity 0.2s ease;
+    }
+
+    .bar-fill {
+      height: 100%;
+      flex: 0 0 auto;
+      min-width: 2px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      overflow: hidden;
+      border-radius: 0 2px 2px 0;
+    }
+
+    .bar-row.is-bora .bar-fill {
+      background-color: var(--bar-bora);
+    }
+
+    .bar-row.is-other .bar-fill {
+      background-color: var(--bar-other);
+    }
+
+    .bar-row.dimmed {
+      opacity: 0.22 !important;
+    }
+
+    .bar-name {
+      font-family: var(--font-mono);
+      font-size: 18.5px;
+      font-weight: 500;
+      color: var(--text-inside-bar);
+      white-space: nowrap;
+      padding-right: 8px;
+      padding-left: 6px;
+      letter-spacing: -0.4px;
+      line-height: 1;
+    }
+
+    .bar-score {
+      flex: 0 0 auto;
+      font-family: var(--font-mono);
+      font-size: 20px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-left: 8px;
+      white-space: nowrap;
+      line-height: 1;
+    }
+
+    /* Top 8 Cutoff Line (between rank 8 and rank 9) */
+    .cutoff-line {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      top: 372.5px; /* Exact midpoint between Rank 8 bottom (369px) and Rank 9 top (376px) */
+      height: 0;
+      border-top: 2.5px dashed var(--cutoff-orange);
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    .cutoff-badge {
+      position: absolute;
+      right: 4px;
+      bottom: 5px;
+      color: var(--cutoff-orange);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      white-space: nowrap;
+    }
+
+    /* Large Date Indicator in Bottom-Right */
+    .date-watermark {
+      position: absolute;
+      right: 18px;
+      bottom: 34px;
+      font-family: var(--font-mono);
+      font-size: 31px;
+      font-weight: 700;
+      color: #ffffff;
+      z-index: 5;
+      letter-spacing: -0.5px;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+      pointer-events: none;
+    }
+
+    /* Bottom Timeline & Play/Pause Controls */
+    .timeline-footer {
+      height: 62px;
+      padding: 4px 20px 10px 18px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      background: var(--bg-card);
+      position: relative;
+      z-index: 6;
+    }
+
+    .play-btn {
+      width: 34px;
+      height: 34px;
+      background: #2c2e33;
+      border: 1px solid #494d57;
+      border-radius: 50%;
+      color: #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      margin-top: 2px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .play-btn:hover {
+      background: #383b42;
+      border-color: #6c7280;
+    }
+
+    .scrubber-container {
+      flex: 1;
+      position: relative;
+      padding-top: 16px;
+      cursor: pointer;
+    }
+
+    .scrubber-track {
+      width: 100%;
+      height: 2px;
+      background: #8c8f96;
+      position: relative;
+    }
+
+    .scrubber-progress {
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 2px;
+      background: var(--bar-bora);
+      pointer-events: none;
+    }
+
+    .scrubber-handle {
+      position: absolute;
+      top: -7px;
+      width: 4px;
+      height: 16px;
+      background: #ffffff;
+      transform: translateX(-50%);
+      pointer-events: none;
+      box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+    }
+
+    .scrubber-ticks {
+      position: relative;
+      width: 100%;
+      height: 28px;
+      margin-top: 2px;
+    }
+
+    .scrubber-tick {
+      position: absolute;
+      top: 0;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .scrubber-tick-mark {
+      width: 1px;
+      height: 5px;
+      background: #8c8f96;
+      margin-bottom: 3px;
+    }
+
+    .scrubber-tick.major .scrubber-tick-mark {
+      height: 7px;
+      background: #cfd2d6;
+    }
+
+    .scrubber-tick-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      color: #d1d5db;
+      white-space: nowrap;
+    }
+
+    /* Modal for Google Sheets Sync / Data Inspector */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.72);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 16px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-box {
+      background: #1e2025;
+      border: 1px solid #3f434e;
+      border-radius: 10px;
+      width: 100%;
+      max-width: 580px;
+      padding: 20px;
+      font-family: var(--font-sans);
+      color: #f3f4f6;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: #9ca3af;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #d1d5db;
+      margin-bottom: 6px;
+    }
+
+    .form-input {
+      width: 100%;
+      background: #141518;
+      border: 1px solid #373a44;
+      border-radius: 6px;
+      padding: 8px 10px;
+      color: #f9fafb;
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    .form-help {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-top: 5px;
+      line-height: 1.45;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    /* Summary Table below Card */
+    .bora-summary {
+      width: 100%;
+      max-width: 820px;
+      margin-top: 16px;
+      background: #1e2025;
+      border: 1px solid #343740;
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-family: var(--font-sans);
+    }
+
+    .summary-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #e5e7eb;
+    }
+
+    .bora-chips {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 8px;
+    }
+
+    .bora-chip {
+      background: rgba(70, 185, 172, 0.1);
+      border: 1px solid rgba(70, 185, 172, 0.35);
+      border-radius: 6px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .bora-chip-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: #5eead4;
+      font-weight: 700;
+    }
+
+    .bora-chip-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    @media (max-width: 600px) {
+      .bar-name {
+        font-size: 14px;
+      }
+      .bar-score {
+        font-size: 15px;
+      }
+      .date-watermark {
+        font-size: 24px;
+      }
+      .axis-layer, .bars-layer {
+        left: 12px;
+        right: 54px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Controls & Filter Bar -->
+  <div class="top-toolbar">
+    <div class="toolbar-group">
+      <span class="legend-pill">
+        <span class="legend-dot" style="background: var(--bar-bora);"></span>
+        Destaque Bora (<span id="boraCountBadge">5</span>)
+      </span>
+      <span class="legend-pill">
+        <span class="legend-dot" style="background: var(--bar-other);"></span>
+        Demais Jogadores
+      </span>
+      <button class="btn-tool" id="btnHighlightBora" title="Focar apenas nos jogadores Bora">
+        Destacar Bora
+      </button>
+    </div>
+
+    <div class="toolbar-group">
+      <label for="speedSelect" style="font-size: 12px; color: #9ca3af;">Velocidade:</label>
+      <select id="speedSelect" class="speed-select">
+        <option value="0.5">0.5x</option>
+        <option value="1" selected>1.0x (Vídeo)</option>
+        <option value="1.5">1.5x</option>
+        <option value="2">2.0x</option>
+      </select>
+      <button class="btn-tool btn-video" id="btnDownloadVideo" title="Gravar e baixar o vídeo completo da animação">
+        ⬇ Baixar Vídeo
+      </button>
+      <button class="btn-tool" id="btnOpenSync">
+        ⟳ Planilha / Dados
+      </button>
+    </div>
+  </div>
+
+  <!-- Offscreen High-Res Canvas for Direct Video Recording/Export -->
+  <canvas id="exportCanvas" width="820" height="776" style="display:none;"></canvas>
+
+  <!-- Main Bar Chart Race Card (Faithful to Video) -->
+  <div class="race-card">
+    <div class="card-header">
+      <div class="card-title">Rank Modern</div>
+    </div>
+
+    <div class="chart-stage" id="chartStage">
+      <!-- Dynamic X-Axis Gridlines -->
+      <div class="axis-layer" id="axisLayer"></div>
+
+      <!-- Top 8 Cutoff Dashed Line -->
+      <div class="cutoff-line">
+        <span class="cutoff-badge">— CORTE TOP 8 —</span>
+      </div>
+
+      <!-- Animated Horizontal Bars -->
+      <div class="bars-layer" id="barsLayer"></div>
+
+      <!-- Current Week Date Watermark -->
+      <div class="date-watermark" id="dateWatermark">2/7/26</div>
+    </div>
+
+    <!-- Timeline Scrubber & Play/Pause -->
+    <div class="timeline-footer">
+      <button class="play-btn" id="playPauseBtn" title="Reproduzir / Pausar">
+        <svg id="iconPause" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <rect x="5" y="4" width="5" height="16" rx="1"></rect>
+          <rect x="14" y="4" width="5" height="16" rx="1"></rect>
+        </svg>
+        <svg id="iconPlay" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+          <polygon points="6,4 20,12 6,20"></polygon>
+        </svg>
+      </button>
+
+      <div class="scrubber-container" id="scrubberContainer">
+        <div class="scrubber-track">
+          <div class="scrubber-progress" id="scrubberProgress" style="width: 0%;"></div>
+          <div class="scrubber-handle" id="scrubberHandle" style="left: 0%;"></div>
+        </div>
+        <div class="scrubber-ticks" id="scrubberTicks"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Bora Players Tracker -->
+  <div class="bora-summary">
+    <div class="summary-header">
+      <span>Desempenho em Tempo Real — Jogadores <strong>Bora</strong></span>
+      <span id="summaryDateLabel" style="color: #9ca3af; font-family: var(--font-mono); font-size: 12px;">Semana: 2/7/26</span>
+    </div>
+    <div class="bora-chips" id="boraChipsContainer"></div>
+  </div>
+
+  <!-- Modal for Google Sheets Live Sync / CSV Import -->
+  <div class="modal-backdrop" id="syncModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">Conexão com Google Sheets (PRI_Teste)</div>
+        <button class="modal-close" id="btnCloseModal">&times;</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">ID ou Link da Planilha Google Sheets</label>
+        <input type="text" id="inputSheetId" class="form-input" value="1BjaihYOGkMi5TJyt8fOigRs7er7e0XbHoNbsaU48yy4" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Nome da Aba</label>
+        <input type="text" id="inputSheetName" class="form-input" value="Pontos_ate_semana" />
+        <div class="form-help">
+          Para leitura ao vivo direto pelo navegador, a planilha deve estar compartilhada como <strong>"Qualquer pessoa com o link pode ver"</strong>. Caso esteja privada ou offline, o site utiliza automaticamente os dados integrados de <code>PRI_Teste</code>.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Ou importe um arquivo CSV exportado da aba <code>Pontos_ate_semana</code></label>
+        <input type="file" id="inputCsvFile" accept=".csv,.txt" class="form-input" />
+      </div>
+
+      <div id="syncFeedback" style="font-size: 12px; color: #5eead4; min-height: 18px;"></div>
+
+      <div class="modal-actions">
+        <button class="btn-tool" id="btnResetEmbedded">Restaurar Dados Originais</button>
+        <button class="btn-tool active" id="btnFetchLive">Sincronizar Agora</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Complete dataset extracted from PRI_Teste -> Pontos_ate_semana
+    const EMBEDDED_DATA = {"spreadsheetId": "1BjaihYOGkMi5TJyt8fOigRs7er7e0XbHoNbsaU48yy4", "sheetName": "Pontos_ate_semana", "spreadsheetTitle": "PRI_Teste", "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1BjaihYOGkMi5TJyt8fOigRs7er7e0XbHoNbsaU48yy4/edit", "dates": ["2/7/26", "9/7/26", "16/7/26", "23/7/26", "30/7/26", "6/8/26", "13/8/26", "20/8/26", "27/8/26", "3/9/26", "10/9/26", "17/9/26", "24/9/26", "1/10/26", "8/10/26"], "players": [{"name": "Eduardo Caruso", "tag": "Bora", "isBora": true, "scores": [13.0, 24.0, 31.0, 39.0, 44.0, 55.0, 68.0, 68.0, 78.0, 91.0, 104.0, 129.0, 139.0, 146.0, 156.0]}, {"name": "Deric Sousa", "tag": "", "isBora": false, "scores": [0.0, 10.0, 10.0, 21.0, 25.0, 29.0, 42.0, 49.0, 59.0, 70.0, 83.0, 96.0, 97.0, 107.0, 117.0]}, {"name": "Arthur Matos", "tag": "", "isBora": false, "scores": [10.0, 20.0, 20.0, 20.0, 30.0, 40.0, 50.0, 50.0, 61.0, 74.0, 75.0, 102.0, 102.0, 102.0, 113.0]}, {"name": "Victor Marques", "tag": "Bora", "isBora": true, "scores": [10.0, 21.0, 21.0, 21.0, 31.0, 31.0, 38.0, 38.0, 45.0, 59.0, 70.0, 83.0, 87.0, 98.0, 111.0]}, {"name": "Gamaliel Cardoso", "tag": "", "isBora": false, "scores": [8.0, 15.0, 25.0, 29.0, 30.0, 35.0, 48.0, 52.0, 59.0, 63.0, 70.0, 79.0, 87.0, 97.0, 107.0]}, {"name": "Aimbere Mendonça", "tag": "", "isBora": false, "scores": [4.0, 11.0, 15.0, 25.0, 32.0, 36.0, 43.0, 47.0, 54.0, 67.0, 74.0, 95.0, 102.0, 106.0, 107.0]}, {"name": "Edgar Bruno", "tag": "Bora", "isBora": true, "scores": [0.0, 7.0, 18.0, 25.0, 33.0, 41.0, 51.0, 58.0, 58.0, 65.0, 75.0, 94.0, 95.0, 99.0, 106.0]}, {"name": "Welber Alves", "tag": "", "isBora": false, "scores": [10.0, 20.0, 27.0, 27.0, 27.0, 27.0, 27.0, 37.0, 47.0, 57.0, 61.0, 80.0, 80.0, 90.0, 97.0]}, {"name": "Giovanni Santin", "tag": "", "isBora": false, "scores": [8.0, 21.0, 21.0, 28.0, 28.0, 28.0, 35.0, 39.0, 52.0, 52.0, 52.0, 71.0, 82.0, 86.0, 96.0]}, {"name": "Joao Flecha", "tag": "", "isBora": false, "scores": [7.0, 14.0, 18.0, 22.0, 22.0, 22.0, 29.0, 40.0, 47.0, 54.0, 64.0, 83.0, 93.0, 93.0, 93.0]}, {"name": "Samuel Gomes", "tag": "Bora", "isBora": true, "scores": [13.0, 13.0, 24.0, 28.0, 39.0, 39.0, 49.0, 49.0, 50.0, 50.0, 50.0, 63.0, 63.0, 73.0, 87.0]}, {"name": "Ricardo Castro", "tag": "", "isBora": false, "scores": [7.0, 14.0, 14.0, 14.0, 21.0, 28.0, 35.0, 42.0, 46.0, 56.0, 61.0, 74.0, 74.0, 78.0, 85.0]}, {"name": "Marcos Teixeira", "tag": "", "isBora": false, "scores": [10.0, 24.0, 31.0, 31.0, 31.0, 31.0, 31.0, 31.0, 31.0, 41.0, 49.0, 68.0, 75.0, 82.0, 82.0]}, {"name": "Pedro Paniago", "tag": "", "isBora": false, "scores": [4.0, 4.0, 4.0, 4.0, 4.0, 12.0, 12.0, 12.0, 25.0, 25.0, 25.0, 52.0, 62.0, 69.0, 82.0]}, {"name": "Fabio Ancelmo", "tag": "", "isBora": false, "scores": [0.0, 4.0, 4.0, 4.0, 11.0, 11.0, 11.0, 21.0, 34.0, 34.0, 34.0, 59.0, 69.0, 69.0, 79.0]}, {"name": "Kalel Alves", "tag": "", "isBora": false, "scores": [7.0, 14.0, 21.0, 21.0, 21.0, 21.0, 21.0, 25.0, 32.0, 36.0, 43.0, 60.0, 60.0, 67.0, 77.0]}, {"name": "Pedro Medeiros", "tag": "Bora", "isBora": true, "scores": [0.0, 0.0, 0.0, 11.0, 19.0, 26.0, 36.0, 43.0, 50.0, 60.0, 60.0, 67.0, 74.0, 75.0, 76.0]}, {"name": "Felipe Pereira", "tag": "", "isBora": false, "scores": [13.0, 13.0, 23.0, 24.0, 24.0, 24.0, 35.0, 35.0, 35.0, 35.0, 35.0, 48.0, 55.0, 63.0, 63.0]}, {"name": "Jonathan Melamed", "tag": "", "isBora": false, "scores": [0.0, 11.0, 11.0, 19.0, 32.0, 32.0, 32.0, 32.0, 46.0, 46.0, 46.0, 46.0, 46.0, 46.0, 59.0]}, {"name": "Tiago Rubo", "tag": "", "isBora": false, "scores": [0.0, 10.0, 10.0, 17.0, 17.0, 21.0, 28.0, 39.0, 49.0, 59.0, 59.0, 59.0, 59.0, 59.0, 59.0]}, {"name": "Leonardo Santiago", "tag": "", "isBora": false, "scores": [11.0, 18.0, 22.0, 22.0, 22.0, 22.0, 23.0, 23.0, 33.0, 33.0, 37.0, 58.0, 58.0, 58.0, 58.0]}, {"name": "Bruno Dourado", "tag": "", "isBora": false, "scores": [0.0, 0.0, 0.0, 10.0, 17.0, 17.0, 17.0, 24.0, 24.0, 24.0, 31.0, 38.0, 45.0, 45.0, 52.0]}, {"name": "Igor Neiva", "tag": "", "isBora": false, "scores": [0.0, 4.0, 4.0, 4.0, 5.0, 5.0, 6.0, 6.0, 6.0, 13.0, 26.0, 39.0, 43.0, 43.0, 48.0]}, {"name": "Vinicius Ferracini", "tag": "", "isBora": false, "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 11.0, 18.0, 18.0, 25.0, 27.0, 27.0, 40.0, 47.0, 47.0, 47.0]}, {"name": "Victor Capanema", "tag": "", "isBora": false, "scores": [4.0, 5.0, 15.0, 19.0, 19.0, 24.0, 34.0, 38.0, 38.0, 45.0, 45.0, 45.0, 45.0, 45.0, 45.0]}, {"name": "Pedro Palhares", "tag": "", "isBora": false, "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 10.0, 17.0, 24.0, 24.0, 24.0, 24.0, 31.0, 38.0]}, {"name": "Kelsen Moura", "tag": "", "isBora": false, "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 11.0, 11.0, 11.0, 11.0, 21.0, 36.0, 36.0, 36.0, 36.0]}, {"name": "Ivan Brandao", "tag": "", "isBora": false, "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 7.0, 7.0, 7.0, 7.0, 7.0, 21.0, 21.0, 21.0, 21.0, 25.0]}, {"name": "Joao Oliveira", "tag": "", "isBora": false, "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 14.0, 14.0, 14.0, 14.0, 24.0, 24.0, 24.0, 24.0, 24.0]}, {"name": "Leo Roque", "tag": "", "isBora": false, "scores": [0.0, 0.0, 0.0, 7.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 13.0]}, {"name": "John Magic", "tag": "", "isBora": false, "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 6.0, 6.0, 13.0, 13.0, 13.0, 13.0]}, {"name": "Gustavo Cerqueira", "tag": "", "isBora": false, "scores": [0.0, 4.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 12.0, 12.0, 12.0, 12.0, 12.0]}, {"name": "Lucas Andre", "tag": "", "isBora": false, "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 10.0]}, {"name": "Ricardo Valim", "tag": "", "isBora": false, "scores": [0.0, 4.0, 5.0, 5.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0]}, {"name": "Miguel Molina", "tag": "", "isBora": false, "scores": [7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0]}, {"name": "Marcus Estrela", "tag": "", "isBora": false, "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 7.0, 7.0, 7.0, 7.0]}, {"name": "Bruno Guimaraes", "tag": "", "isBora": false, "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0]}, {"name": "Rafael Misael", "tag": "", "isBora": false, "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4.0]}, {"name": "Samir Tarilonte", "tag": "", "isBora": false, "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4.0]}]};
+
+    let appData = JSON.parse(JSON.stringify(EMBEDDED_DATA));
+
+    // Animation & Race Constants matching the reference video
+    const TOP_N = 15;
+    const BAR_HEIGHT = 35;
+    const BAR_GAP = 7;
+    const ROW_STRIDE = BAR_HEIGHT + BAR_GAP; // 42px per rank slot
+    const BASE_DURATION_PER_WEEK = 3200; // ~3.2s per week = ~45s total across 14 transitions
+
+    // State
+    let isPlaying = true;
+    let speedMultiplier = 1.0;
+    let spotlightBoraOnly = false;
+    let progressFloat = 0.0; // 0 to (dates.length - 1)
+    let lastTimestamp = null;
+    let isRecordingVideo = false;
+    let activeMediaRecorder = null;
+
+    // DOM Elements
+    const barsLayer = document.getElementById('barsLayer');
+    const axisLayer = document.getElementById('axisLayer');
+    const dateWatermark = document.getElementById('dateWatermark');
+    const summaryDateLabel = document.getElementById('summaryDateLabel');
+    const scrubberProgress = document.getElementById('scrubberProgress');
+    const scrubberHandle = document.getElementById('scrubberHandle');
+    const scrubberTicks = document.getElementById('scrubberTicks');
+    const scrubberContainer = document.getElementById('scrubberContainer');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const iconPause = document.getElementById('iconPause');
+    const iconPlay = document.getElementById('iconPlay');
+    const boraChipsContainer = document.getElementById('boraChipsContainer');
+    const boraCountBadge = document.getElementById('boraCountBadge');
+    const btnHighlightBora = document.getElementById('btnHighlightBora');
+    const btnDownloadVideo = document.getElementById('btnDownloadVideo');
+    const exportCanvas = document.getElementById('exportCanvas');
+    const speedSelect = document.getElementById('speedSelect');
+
+    // Map of player name -> DOM elements
+    let barElements = new Map();
+    let axisTickElements = new Map();
+
+    // Format date like in video (e.g., 2/7/26), supporting DD/MM/YYYY, D/M/YY, or gviz Date(YYYY,M,D)
+    function normalizeDateLabel(raw) {
+      if (!raw) return '';
+      const s = String(raw).trim();
+      const gvizMatch = s.match(/^Date\((\d+),\s*(\d+),\s*(\d+)/i);
+      if (gvizMatch) {
+        const y = gvizMatch[1].slice(-2);
+        const m = parseInt(gvizMatch[2], 10) + 1;
+        const d = parseInt(gvizMatch[3], 10);
+        return `${d}/${m}/${y}`;
+      }
+      const parts = s.split(/[\/-]/);
+      if (parts.length === 3) {
+        let d = parseInt(parts[0], 10);
+        let m = parseInt(parts[1], 10);
+        let y = parts[2];
+        if (parts[0].length === 4) {
+          y = parts[0].slice(-2);
+          m = parseInt(parts[1], 10);
+          d = parseInt(parts[2], 10);
+        } else if (y.length === 4) {
+          y = y.slice(-2);
+        }
+        if (!isNaN(d) && !isNaN(m)) return `${d}/${m}/${y}`;
+      }
+      return s;
+    }
+
+    function initChartDOM() {
+      barsLayer.innerHTML = '';
+      barElements.clear();
+
+      appData.DatesNormalized = appData.dates.map(normalizeDateLabel);
+      const boraPlayers = appData.players.filter(p => p.isBora);
+      boraCountBadge.textContent = boraPlayers.length;
+
+      // Create DOM elements for each player
+      appData.players.forEach((player) => {
+        const row = document.createElement('div');
+        row.className = `bar-row ${player.isBora ? 'is-bora' : 'is-other'}`;
+        row.style.transform = `translateY(${(TOP_N + 2) * ROW_STRIDE}px)`;
+        row.style.opacity = '0';
+
+        const fill = document.createElement('div');
+        fill.className = 'bar-fill';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'bar-name';
+        nameSpan.textContent = player.name;
+
+        const scoreSpan = document.createElement('span');
+        scoreSpan.className = 'bar-score';
+        scoreSpan.textContent = '0';
+
+        fill.appendChild(nameSpan);
+        row.appendChild(fill);
+        row.appendChild(scoreSpan);
+        barsLayer.appendChild(row);
+
+        barElements.set(player.name, {
+          row,
+          fill,
+          nameSpan,
+          scoreSpan,
+          currentVisualRank: TOP_N + 2,
+          initialized: false
+        });
+      });
+
+      buildScrubberTicks();
+      renderFrame(progressFloat, true);
+    }
+
+    function buildScrubberTicks() {
+      scrubberTicks.innerHTML = '';
+      const n = appData.DatesNormalized.length;
+      if (n <= 1) return;
+
+      // Dynamically scale tick label interval so adding more weeks never crowds the timeline
+      const labelStep = n <= 9 ? 1 : (n <= 19 ? 2 : (n <= 30 ? 3 : 4));
+
+      appData.DatesNormalized.forEach((dLabel, idx) => {
+        const pct = (idx / (n - 1)) * 100;
+        const tick = document.createElement('div');
+        const isLast = (idx === n - 1);
+        const isSpacedStep = (idx % labelStep === 0) && ((n - 1 - idx) >= Math.ceil(labelStep / 2));
+        const isMajor = isLast || isSpacedStep;
+        tick.className = `scrubber-tick ${isMajor ? 'major' : ''}`;
+        tick.style.left = `${pct}%`;
+
+        const mark = document.createElement('div');
+        mark.className = 'scrubber-tick-mark';
+        tick.appendChild(mark);
+
+        if (isMajor) {
+          const lbl = document.createElement('div');
+          lbl.className = 'scrubber-tick-label';
+          lbl.textContent = dLabel;
+          tick.appendChild(lbl);
+        }
+
+        scrubberTicks.appendChild(tick);
+      });
+    }
+
+    // Compute nice X-axis step (5, 10, 20, 50, 100) depending on current max score
+    function getAxisStep(maxScore) {
+      if (maxScore <= 18) return 5;
+      if (maxScore <= 38) return 10;
+      if (maxScore <= 92) return 20;
+      if (maxScore <= 240) return 50;
+      return 100;
+    }
+
+    function updateAxisGrid(maxScore) {
+      const step = getAxisStep(maxScore);
+      const activeTicks = new Set();
+      for (let v = 0; v <= maxScore; v += step) {
+        activeTicks.add(v);
+      }
+
+      // Remove old ticks not in activeTicks
+      for (const [val, el] of axisTickElements.entries()) {
+        if (!activeTicks.has(val)) {
+          el.remove();
+          axisTickElements.delete(val);
+        }
+      }
+
+      // Add or update active ticks
+      activeTicks.forEach(val => {
+        let el = axisTickElements.get(val);
+        if (!el) {
+          el = document.createElement('div');
+          el.className = 'axis-tick';
+          el.innerHTML = `<div class="axis-tick-label">${val}</div><div class="axis-tick-line"></div>`;
+          axisLayer.appendChild(el);
+          axisTickElements.set(val, el);
+        }
+        const pct = maxScore > 0 ? (val / maxScore) * 100 : 0;
+        el.style.left = `${pct}%`;
+      });
+    }
+
+    function renderFrame(t, instant = false) {
+      const numDates = appData.dates.length;
+      if (numDates === 0) return;
+
+      const clampedT = Math.max(0, Math.min(numDates - 1, t));
+      const idx0 = Math.floor(clampedT);
+      const idx1 = Math.min(numDates - 1, idx0 + 1);
+      const frac = clampedT - idx0;
+
+      // Update date watermark (matches video: changes as each week milestone is reached)
+      const activeDateStr = appData.DatesNormalized[idx0] || '';
+      dateWatermark.textContent = activeDateStr;
+      summaryDateLabel.textContent = `Semana: ${activeDateStr}`;
+
+      // Update scrubber UI
+      const totalPct = numDates > 1 ? (clampedT / (numDates - 1)) * 100 : 100;
+      scrubberProgress.style.width = `${totalPct}%`;
+      scrubberHandle.style.left = `${totalPct}%`;
+
+      // Interpolate scores for every player
+      const currentStandings = appData.players.map((p, originalIdx) => {
+        const s0 = p.scores[idx0] || 0;
+        const s1 = p.scores[idx1] !== undefined ? p.scores[idx1] : s0;
+        const interpScore = s0 + (s1 - s0) * frac;
+        return {
+          name: p.name,
+          isBora: p.isBora,
+          score: interpScore,
+          displayScore: Math.round(interpScore),
+          originalIdx
+        };
+      });
+
+      // Sort descending by interpolated score, tie-break alphabetically (matching video)
+      currentStandings.sort((a, b) => {
+        if (Math.abs(b.score - a.score) > 0.0001) return b.score - a.score;
+        return a.name.localeCompare(b.name, 'pt-BR');
+      });
+
+      const maxScore = Math.max(10, currentStandings[0]?.score || 10);
+      updateAxisGrid(maxScore);
+
+      const trackWidth = barsLayer.clientWidth || 726;
+
+      // Update bar positions and strictly proportional widths
+      currentStandings.forEach((item, rankIndex) => {
+        const dom = barElements.get(item.name);
+        if (!dom) return;
+
+        const isVisible = rankIndex < TOP_N && item.score > 0;
+        const targetRank = isVisible ? rankIndex : TOP_N + 1.5;
+
+        if (instant || !dom.initialized) {
+          dom.currentVisualRank = targetRank;
+          dom.initialized = true;
+        } else {
+          // Smooth rank transition
+          dom.currentVisualRank += (targetRank - dom.currentVisualRank) * 0.22;
+        }
+
+        const yPx = dom.currentVisualRank * ROW_STRIDE;
+        const widthPct = maxScore > 0 ? Math.max(0.5, (item.score / maxScore) * 100) : 0.5;
+
+        dom.row.style.transform = `translate3d(0, ${yPx.toFixed(2)}px, 0)`;
+        dom.fill.style.width = `${widthPct.toFixed(3)}%`;
+        dom.scoreSpan.textContent = item.displayScore;
+
+        // Auto-fit font size only if a low-point bar on a small screen is slightly narrower than the name
+        const barPx = (widthPct / 100) * trackWidth;
+        const maxFontSize = window.innerWidth <= 600 ? 14 : 18.5;
+        const charFactor = 0.61;
+        const availableTextPx = Math.max(40, barPx - 14);
+        const idealFont = (availableTextPx / Math.max(1, item.name.length)) / charFactor;
+        const fittedFont = Math.max(11, Math.min(maxFontSize, idealFont));
+        dom.nameSpan.style.fontSize = `${fittedFont.toFixed(1)}px`;
+
+        if (isVisible) {
+          dom.row.style.opacity = '1';
+        } else {
+          dom.row.style.opacity = '0';
+        }
+
+        if (spotlightBoraOnly && !item.isBora) {
+          dom.row.classList.add('dimmed');
+        } else {
+          dom.row.classList.remove('dimmed');
+        }
+      });
+
+      // Update Bora real-time summary cards below the chart
+      const boraStandings = currentStandings
+        .map((item, idx) => ({ ...item, rank: idx + 1 }))
+        .filter(item => item.isBora);
+
+      boraChipsContainer.innerHTML = boraStandings.map(b => `
+        <div class="bora-chip">
+          <div class="bora-chip-top">
+            <span>#${b.rank} ${b.rank <= 8 ? '★ TOP 8' : ''}</span>
+            <span>${b.displayScore} pts</span>
+          </div>
+          <div class="bora-chip-name" title="${b.name}">${b.name}</div>
+        </div>
+      `).join('');
+
+      // If currently recording video, also render the exact frame onto exportCanvas
+      if (isRecordingVideo) {
+        drawRaceCardToCanvas(clampedT, currentStandings, maxScore, activeDateStr, totalPct);
+      }
+    }
+
+    // Pixel-accurate 2D Canvas renderer for direct video export
+    function drawRaceCardToCanvas(clampedT, currentStandings, maxScore, activeDateStr, totalPct) {
+      const ctx = exportCanvas.getContext('2d');
+      const W = exportCanvas.width;  // 820
+      const H = exportCanvas.height; // 776
+      const monoFont = "'JetBrains Mono', 'Fira Code', Consolas, 'Liberation Mono', monospace";
+
+      // 1. Card background & outer border
+      ctx.fillStyle = '#25262b';
+      ctx.fillRect(0, 0, W, H);
+      ctx.strokeStyle = '#dcdcdc';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(1, 1, W - 2, H - 2);
+
+      // 2. Header ("Rank Modern")
+      ctx.strokeStyle = '#dcdcdc';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, 46);
+      ctx.lineTo(W, 46);
+      ctx.stroke();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `700 19px ${monoFont}`;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('Rank Modern', 18, 23);
+
+      // 3. Chart geometry
+      const stageTop = 46;
+      const stageH = 668;
+      const xLeft = 18;
+      const xRight = W - 76;
+      const trackW = xRight - xLeft; // 726px
+      const barsTop = stageTop + 40; // 86px
+
+      // 4. Draw visible bars
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(2, stageTop + 1, W - 4, stageH - 2);
+      ctx.clip();
+
+      currentStandings.forEach((item, rankIndex) => {
+        const dom = barElements.get(item.name);
+        if (!dom) return;
+        const isVisible = rankIndex < TOP_N && item.score > 0;
+        if (!isVisible && dom.currentVisualRank > TOP_N + 0.8) return;
+
+        const y = barsTop + dom.currentVisualRank * ROW_STRIDE;
+        const widthPct = maxScore > 0 ? Math.max(0.5, (item.score / maxScore) * 100) : 0.5;
+        const barW = Math.max(2, (widthPct / 100) * trackW);
+
+        ctx.save();
+        if (!isVisible) {
+          ctx.globalAlpha = 0;
+        } else if (spotlightBoraOnly && !item.isBora) {
+          ctx.globalAlpha = 0.22;
+        } else {
+          ctx.globalAlpha = 1.0;
+        }
+
+        // Bar fill
+        ctx.fillStyle = item.isBora ? '#46b9ac' : '#d36566';
+        ctx.fillRect(xLeft, y, barW, BAR_HEIGHT);
+
+        // Player name inside bar (clipped to bar width)
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(xLeft, y, barW, BAR_HEIGHT);
+        ctx.clip();
+
+        const charFactor = 0.61;
+        const availableTextPx = Math.max(40, barW - 14);
+        const idealFont = (availableTextPx / Math.max(1, item.name.length)) / charFactor;
+        const fittedFont = Math.max(11, Math.min(18.5, idealFont));
+
+        ctx.fillStyle = '#141619';
+        ctx.font = `500 ${fittedFont.toFixed(1)}px ${monoFont}`;
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(item.name, xLeft + barW - 8, y + BAR_HEIGHT / 2 + 0.5);
+        ctx.restore();
+
+        // Score outside bar
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `700 20px ${monoFont}`;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(String(item.displayScore), xLeft + barW + 8, y + BAR_HEIGHT / 2 + 0.5);
+
+        ctx.restore();
+      });
+
+      // 5. X-Axis Ticks & Vertical Gridlines (drawn over bars just like in video)
+      const step = getAxisStep(maxScore);
+      for (let v = 0; v <= maxScore; v += step) {
+        const x = xLeft + (maxScore > 0 ? (v / maxScore) * trackW : 0);
+        ctx.fillStyle = '#f1f3f5';
+        ctx.font = `700 13px ${monoFont}`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText(String(v), x, stageTop + 12);
+
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x, stageTop + 31);
+        ctx.lineTo(x, stageTop + stageH - 38);
+        ctx.stroke();
+      }
+
+      // 6. Top 8 Cutoff Dashed Line
+      const cutoffY = stageTop + 372.5;
+      ctx.save();
+      ctx.strokeStyle = '#dba74e';
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([7, 6]);
+      ctx.beginPath();
+      ctx.moveTo(14, cutoffY);
+      ctx.lineTo(W - 14, cutoffY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = '#dba74e';
+      ctx.font = `700 11px ${monoFont}`;
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText('— CORTE TOP 8 —', W - 18, cutoffY - 5);
+      ctx.restore();
+
+      // 7. Large Date Watermark in bottom-right
+      ctx.save();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `700 31px ${monoFont}`;
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'bottom';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+      ctx.shadowBlur = 8;
+      ctx.shadowOffsetY = 2;
+      ctx.fillText(activeDateStr, W - 18, stageTop + stageH - 34);
+      ctx.restore();
+
+      ctx.restore(); // end chart stage clip
+
+      // 8. Bottom Timeline Scrubber Footer
+      const footerTop = stageTop + stageH; // 714px
+      const btnCx = 18 + 17;
+      const btnCy = footerTop + 6 + 17;
+      ctx.fillStyle = '#2c2e33';
+      ctx.strokeStyle = '#494d57';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(btnCx, btnCy, 17, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Pause icon inside button
+      ctx.fillStyle = '#e5e7eb';
+      ctx.fillRect(btnCx - 5, btnCy - 6, 3.5, 12);
+      ctx.fillRect(btnCx + 1.5, btnCy - 6, 3.5, 12);
+
+      // Scrubber track
+      const scrubLeft = 66;
+      const scrubRight = W - 20;
+      const scrubW = scrubRight - scrubLeft;
+      const scrubY = footerTop + 20;
+
+      ctx.fillStyle = '#8c8f96';
+      ctx.fillRect(scrubLeft, scrubY, scrubW, 2);
+
+      const progW = (totalPct / 100) * scrubW;
+      ctx.fillStyle = '#46b9ac';
+      ctx.fillRect(scrubLeft, scrubY, progW, 2);
+
+      // Scrubber handle
+      const handleX = scrubLeft + progW;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(handleX - 2, scrubY - 7, 4, 16);
+
+      // Scrubber ticks & labels
+      const n = appData.DatesNormalized.length;
+      if (n > 1) {
+        const labelStep = n <= 9 ? 1 : (n <= 19 ? 2 : (n <= 30 ? 3 : 4));
+        appData.DatesNormalized.forEach((dLabel, idx) => {
+          const tx = scrubLeft + (idx / (n - 1)) * scrubW;
+          const isLast = (idx === n - 1);
+          const isSpacedStep = (idx % labelStep === 0) && ((n - 1 - idx) >= Math.ceil(labelStep / 2));
+          const isMajor = isLast || isSpacedStep;
+
+          ctx.fillStyle = isMajor ? '#cfd2d6' : '#8c8f96';
+          ctx.fillRect(tx - 0.5, scrubY + 4, 1, isMajor ? 7 : 5);
+
+          if (isMajor) {
+            ctx.fillStyle = '#d1d5db';
+            ctx.font = `600 10px ${monoFont}`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.fillText(dLabel, tx, scrubY + 14);
+          }
+        });
+      }
+    }
+
+    function getSupportedVideoConfig() {
+      const candidates = [
+        { mimeType: 'video/mp4;codecs=avc1.42E01E', ext: 'mp4' },
+        { mimeType: 'video/mp4', ext: 'mp4' },
+        { mimeType: 'video/webm;codecs=vp9', ext: 'webm' },
+        { mimeType: 'video/webm;codecs=vp8', ext: 'webm' },
+        { mimeType: 'video/webm', ext: 'webm' }
+      ];
+      if (typeof MediaRecorder !== 'undefined') {
+        for (const c of candidates) {
+          if (!c.mimeType || MediaRecorder.isTypeSupported(c.mimeType)) {
+            return c;
+          }
+        }
+      }
+      return { mimeType: '', ext: 'webm' };
+    }
+
+    function startOrStopVideoExport() {
+      if (isRecordingVideo && activeMediaRecorder) {
+        // Allow stopping early and saving what was recorded so far
+        activeMediaRecorder.stop();
+        return;
+      }
+
+      if (typeof MediaRecorder === 'undefined' || !exportCanvas.captureStream) {
+        alert('Seu navegador não suporta gravação de vídeo direta via HTML5 Canvas.');
+        return;
+      }
+
+      const config = getSupportedVideoConfig();
+      const chunks = [];
+      isRecordingVideo = true;
+
+      // Reset race to start (week 0) and draw initial frame
+      progressFloat = 0;
+      isPlaying = false;
+      renderFrame(0, true);
+
+      const stream = exportCanvas.captureStream(30);
+      const options = { videoBitsPerSecond: 6000000 };
+      if (config.mimeType) options.mimeType = config.mimeType;
+
+      try {
+        activeMediaRecorder = new MediaRecorder(stream, options);
+      } catch (e) {
+        activeMediaRecorder = new MediaRecorder(stream);
+      }
+
+      activeMediaRecorder.ondataavailable = (ev) => {
+        if (ev.data && ev.data.size > 0) chunks.push(ev.data);
+      };
+
+      activeMediaRecorder.onstop = () => {
+        isRecordingVideo = false;
+        activeMediaRecorder = null;
+        btnDownloadVideo.classList.remove('recording');
+        btnDownloadVideo.textContent = '⬇ Baixar Vídeo';
+
+        const blobType = config.mimeType || 'video/webm';
+        const blob = new Blob(chunks, { type: blobType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `rank_modern_race.${config.ext}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+      };
+
+      btnDownloadVideo.classList.add('recording');
+      btnDownloadVideo.textContent = '⏹ Gravando (0%)...';
+      activeMediaRecorder.start(100);
+
+      // Hold first frame briefly (350ms), then play through to the end
+      setTimeout(() => {
+        if (!isRecordingVideo) return;
+        lastTimestamp = null;
+        isPlaying = true;
+        updatePlayPauseIcons();
+      }, 350);
+    }
+
+    btnDownloadVideo.addEventListener('click', startOrStopVideoExport);
+
+    function updatePlayPauseIcons() {
+      if (isPlaying) {
+        iconPause.style.display = 'block';
+        iconPlay.style.display = 'none';
+      } else {
+        iconPause.style.display = 'none';
+        iconPlay.style.display = 'block';
+      }
+    }
+
+    function animationLoop(timestamp) {
+      if (!lastTimestamp) lastTimestamp = timestamp;
+      const dt = timestamp - lastTimestamp;
+      lastTimestamp = timestamp;
+
+      if (isPlaying && appData.dates.length > 1) {
+        const step = (dt / BASE_DURATION_PER_WEEK) * speedMultiplier;
+        progressFloat += step;
+
+        if (isRecordingVideo) {
+          const pct = Math.min(100, Math.round((progressFloat / (appData.dates.length - 1)) * 100));
+          btnDownloadVideo.textContent = `⏹ Gravando (${pct}%)...`;
+        }
+
+        if (progressFloat >= appData.dates.length - 1) {
+          progressFloat = appData.dates.length - 1;
+          isPlaying = false;
+          updatePlayPauseIcons();
+
+          if (isRecordingVideo && activeMediaRecorder) {
+            btnDownloadVideo.textContent = '⏳ Finalizando vídeo...';
+            // Hold final frame for 1.2s so viewers can read the final leaderboard
+            setTimeout(() => {
+              if (activeMediaRecorder && activeMediaRecorder.state !== 'inactive') {
+                activeMediaRecorder.stop();
+              }
+            }, 1200);
+          }
+        }
+      }
+
+      renderFrame(progressFloat, false);
+      requestAnimationFrame(animationLoop);
+    }
+
+    // Play / Pause button
+    playPauseBtn.addEventListener('click', () => {
+      if (!isPlaying && progressFloat >= appData.dates.length - 1) {
+        progressFloat = 0;
+        renderFrame(0, true);
+      }
+      isPlaying = !isPlaying;
+      updatePlayPauseIcons();
+    });
+
+    // Scrubber drag & click interaction
+    let isDraggingScrubber = false;
+    function seekFromEvent(e) {
+      const rect = scrubberContainer.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+      progressFloat = ratio * Math.max(0, appData.dates.length - 1);
+      renderFrame(progressFloat, true);
+    }
+
+    scrubberContainer.addEventListener('mousedown', (e) => {
+      isDraggingScrubber = true;
+      seekFromEvent(e);
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (isDraggingScrubber) seekFromEvent(e);
+    });
+    window.addEventListener('mouseup', () => {
+      isDraggingScrubber = false;
+    });
+
+    // Highlight Bora toggle
+    btnHighlightBora.addEventListener('click', () => {
+      spotlightBoraOnly = !spotlightBoraOnly;
+      btnHighlightBora.classList.toggle('active', spotlightBoraOnly);
+      renderFrame(progressFloat, false);
+    });
+
+    // Speed selector
+    speedSelect.addEventListener('change', (e) => {
+      speedMultiplier = parseFloat(e.target.value) || 1.0;
+    });
+
+    // Modal & Live Google Sheets / CSV Reader
+    const syncModal = document.getElementById('syncModal');
+    const btnOpenSync = document.getElementById('btnOpenSync');
+    const btnCloseModal = document.getElementById('btnCloseModal');
+    const btnFetchLive = document.getElementById('btnFetchLive');
+    const btnResetEmbedded = document.getElementById('btnResetEmbedded');
+    const inputSheetId = document.getElementById('inputSheetId');
+    const inputSheetName = document.getElementById('inputSheetName');
+    const inputCsvFile = document.getElementById('inputCsvFile');
+    const syncFeedback = document.getElementById('syncFeedback');
+
+    btnOpenSync.addEventListener('click', () => syncModal.classList.add('open'));
+    btnCloseModal.addEventListener('click', () => syncModal.classList.remove('open'));
+
+    function extractSheetId(raw) {
+      const match = String(raw).match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+      return match ? match[1] : String(raw).trim();
+    }
+
+    // Google Visualization API JSONP loader (bypasses CORS when sheet is shared)
+    function fetchFromGoogleSheetsJSONP(sheetId, sheetName) {
+      return new Promise((resolve, reject) => {
+        const callbackName = 'gvizCallback_' + Math.random().toString(36).substring(2, 9);
+        const script = document.createElement('script');
+        const timeout = setTimeout(() => {
+          cleanup();
+          reject(new Error('Tempo limite excedido ou planilha restrita.'));
+        }, 6500);
+
+        function cleanup() {
+          clearTimeout(timeout);
+          delete window[callbackName];
+          if (script.parentNode) script.parentNode.removeChild(script);
+        }
+
+        window[callbackName] = function(response) {
+          cleanup();
+          if (!response || response.status === 'error' || !response.table) {
+            reject(new Error('Não foi possível ler a tabela via Google Sheets.'));
+            return;
+          }
+          resolve(response.table);
+        };
+
+        script.onerror = () => {
+          cleanup();
+          reject(new Error('Planilha privada ou sem conexão no momento.'));
+        };
+
+        script.src = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/gviz/tq?sheet=${encodeURIComponent(sheetName)}&headers=1&tqx=responseHandler:${callbackName}`;
+        document.body.appendChild(script);
+      });
+    }
+
+    // Default Bora players fallback in case static "Bora" tags in column B shift when rankings change
+    const KNOWN_BORA_PLAYERS = new Set([
+      'eduardo caruso',
+      'victor marques',
+      'edgar bruno',
+      'samuel gomes',
+      'pedro medeiros'
+    ]);
+
+    function parseGvizTable(table) {
+      // Extract dates from columns C onwards (index 2+), supporting both col.label and header-row fallback
+      const dates = [];
+      const validColIndices = [];
+      let headerRowIndex = -1;
+
+      for (let c = 2; c < table.cols.length; c++) {
+        const col = table.cols[c];
+        const label = (col.label || '').trim();
+        if (label) {
+          dates.push(normalizeDateLabel(label));
+          validColIndices.push(c);
+        }
+      }
+
+      // Fallback if gviz placed Row 1 inside table.rows[0] instead of col.label
+      if (dates.length === 0 && table.rows.length > 0) {
+        const firstRowCells = table.rows[0].c || [];
+        for (let c = 2; c < firstRowCells.length; c++) {
+          const cell = firstRowCells[c];
+          const rawLabel = cell ? (cell.f || cell.v || '') : '';
+          if (String(rawLabel).trim() !== '') {
+            dates.push(normalizeDateLabel(rawLabel));
+            validColIndices.push(c);
+          }
+        }
+        if (dates.length > 0) headerRowIndex = 0;
+      }
+
+      const players = [];
+      table.rows.forEach((r, rIdx) => {
+        if (rIdx === headerRowIndex) return;
+        const cells = r.c || [];
+        const nameCell = cells[0];
+        const name = nameCell && (nameCell.v !== null && nameCell.v !== undefined) ? String(nameCell.v).trim() : '';
+        if (!name || name.toUpperCase() === 'DATA') return;
+
+        const tagCell = cells[1];
+        const tag = tagCell && (tagCell.v !== null && tagCell.v !== undefined) ? String(tagCell.v).trim() : '';
+        const isBora = tag.toLowerCase() === 'bora' || KNOWN_BORA_PLAYERS.has(name.toLowerCase());
+
+        const scores = validColIndices.map(cIdx => {
+          const cell = cells[cIdx];
+          const val = cell && cell.v !== null && cell.v !== undefined ? parseFloat(cell.v) : 0;
+          return isNaN(val) ? 0 : val;
+        });
+
+        players.push({ name, tag: isBora ? 'Bora' : tag, isBora, scores });
+      });
+
+      if (dates.length === 0 || players.length === 0) {
+        throw new Error('Formato inesperado na aba Pontos_ate_semana.');
+      }
+      return { dates, players };
+    }
+
+    // Parse CSV text fallback
+    function parseCSVContent(csvText) {
+      const lines = csvText.split(/\r?\n/).filter(l => l.trim().length > 0);
+      if (lines.length < 2) throw new Error('CSV vazio ou inválido.');
+
+      const parseRow = (line) => {
+        const res = [];
+        let cur = '';
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+          const ch = line[i];
+          if (ch === '"') {
+            inQuotes = !inQuotes;
+          } else if (ch === ',' && !inQuotes) {
+            res.push(cur.trim());
+            cur = '';
+          } else {
+            cur += ch;
+          }
+        }
+        res.push(cur.trim());
+        return res;
+      };
+
+      const header = parseRow(lines[0]);
+      const dates = [];
+      const colIndices = [];
+      for (let c = 2; c < header.length; c++) {
+        if (header[c]) {
+          dates.push(normalizeDateLabel(header[c]));
+          colIndices.push(c);
+        }
+      }
+
+      const players = [];
+      for (let r = 1; r < lines.length; r++) {
+        const row = parseRow(lines[r]);
+        const name = row[0] || '';
+        if (!name) continue;
+        const tag = row[1] || '';
+        const isBora = tag.toLowerCase() === 'bora' || KNOWN_BORA_PLAYERS.has(name.toLowerCase());
+        const scores = colIndices.map(c => {
+          const v = parseFloat((row[c] || '0').replace(',', '.'));
+          return isNaN(v) ? 0 : v;
+        });
+        players.push({ name, tag: isBora ? 'Bora' : tag, isBora, scores });
+      }
+      return { dates, players };
+    }
+
+    btnFetchLive.addEventListener('click', async () => {
+      const sheetId = extractSheetId(inputSheetId.value);
+      const sheetName = inputSheetName.value.trim() || 'Pontos_ate_semana';
+      syncFeedback.style.color = '#9ca3af';
+      syncFeedback.textContent = 'Consultando planilha no Google Sheets...';
+
+      try {
+        const table = await fetchFromGoogleSheetsJSONP(sheetId, sheetName);
+        const parsed = parseGvizTable(table);
+        appData.dates = parsed.dates;
+        appData.players = parsed.players;
+        progressFloat = 0;
+        isPlaying = true;
+        updatePlayPauseIcons();
+        initChartDOM();
+        syncFeedback.style.color = '#5eead4';
+        syncFeedback.textContent = `Sucesso! ${parsed.players.length} jogadores e ${parsed.dates.length} semanas carregadas ao vivo.`;
+      } catch (err) {
+        syncFeedback.style.color = '#fbbf24';
+        syncFeedback.textContent = `Aviso: A planilha está com acesso restrito ou offline. Usando os dados integrados de PRI_Teste (${appData.players.length} jogadores, ${appData.dates.length} semanas).`;
+      }
+    });
+
+    inputCsvFile.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const parsed = parseCSVContent(ev.target.result);
+          appData.dates = parsed.dates;
+          appData.players = parsed.players;
+          progressFloat = 0;
+          isPlaying = true;
+          updatePlayPauseIcons();
+          initChartDOM();
+          syncFeedback.style.color = '#5eead4';
+          syncFeedback.textContent = `Arquivo CSV importado com ${parsed.players.length} jogadores e ${parsed.dates.length} semanas!`;
+        } catch (err) {
+          syncFeedback.style.color = '#f87171';
+          syncFeedback.textContent = 'Erro ao ler o CSV: ' + err.message;
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    btnResetEmbedded.addEventListener('click', () => {
+      appData = JSON.parse(JSON.stringify(EMBEDDED_DATA));
+      progressFloat = 0;
+      isPlaying = true;
+      updatePlayPauseIcons();
+      initChartDOM();
+      syncFeedback.style.color = '#5eead4';
+      syncFeedback.textContent = 'Dados originais da planilha PRI_Teste restaurados.';
+    });
+
+    // Initialize and start animation
+    initChartDOM();
+    requestAnimationFrame(animationLoop);
+
+    // Attempt silent live update on load if online and sheet is shared
+    fetchFromGoogleSheetsJSONP(appData.spreadsheetId, appData.sheetName)
+      .then(table => {
+        const parsed = parseGvizTable(table);
+        appData.dates = parsed.dates;
+        appData.players = parsed.players;
+        initChartDOM();
+      })
+      .catch(() => {
+        // Keep embedded PRI_Teste data seamlessly
+      });
+  </script>
+</body>
+</html>
