@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
   <title>Rank Modern — Corrida Top 8 (PRI_Teste)</title>
 
   <!-- Improvement #6: Rich Open Graph & WhatsApp Link Preview Meta Tags -->
@@ -41,6 +41,7 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+      -webkit-tap-highlight-color: transparent;
     }
 
     body {
@@ -53,6 +54,7 @@
       align-items: center;
       justify-content: flex-start;
       padding: 14px 10px 36px;
+      overflow-x: hidden;
     }
 
     /* Top Control Bar — Adapts width to Mobile (460px) or Wide (820px) */
@@ -65,12 +67,14 @@
       justify-content: space-between;
       gap: 8px;
       margin-bottom: 10px;
-      padding: 9px 11px;
+      padding: 10px 12px;
       background: #1e2025;
       border: 1px solid #343740;
       border-radius: 8px;
       font-family: var(--font-sans);
       font-size: 12px;
+      position: relative;
+      z-index: 20;
       transition: max-width 0.25s ease;
     }
 
@@ -88,7 +92,7 @@
     }
 
     .toolbar-group + .toolbar-group {
-      padding-top: 6px;
+      padding-top: 8px;
       border-top: 1px solid rgba(255, 255, 255, 0.06);
     }
 
@@ -107,7 +111,7 @@
       font-weight: 600;
       color: #e5e7eb;
       background: rgba(255, 255, 255, 0.05);
-      padding: 3px 8px;
+      padding: 4px 8px;
       border-radius: 999px;
     }
 
@@ -118,20 +122,37 @@
       display: inline-block;
     }
 
+    button, select, .bar-row, .bora-chip {
+      touch-action: manipulation;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
     .btn-tool {
+      appearance: none;
+      -webkit-appearance: none;
       background: #2e3138;
       color: #f3f4f6;
       border: 1px solid #454954;
       border-radius: 6px;
-      padding: 5px 8px;
-      font-size: 11.5px;
+      padding: 7px 10px;
+      min-height: 32px;
+      font-size: 12px;
       font-weight: 500;
+      font-family: var(--font-sans);
       cursor: pointer;
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 4px;
-      transition: background 0.15s, border-color 0.15s;
+      transition: background 0.15s, border-color 0.15s, transform 0.1s;
       white-space: nowrap;
+      position: relative;
+      z-index: 25;
+    }
+
+    .btn-tool:active {
+      transform: scale(0.97);
     }
 
     .btn-tool:hover {
@@ -140,7 +161,7 @@
     }
 
     .btn-tool.active {
-      background: rgba(70, 185, 172, 0.2);
+      background: rgba(70, 185, 172, 0.22);
       border-color: var(--bar-bora);
       color: #6ee7d8;
     }
@@ -168,9 +189,23 @@
       color: #f3f4f6;
       border: 1px solid #454954;
       border-radius: 6px;
-      padding: 4px 6px;
-      font-size: 11.5px;
+      padding: 5px 8px;
+      min-height: 32px;
+      font-size: 12px;
+      font-family: var(--font-sans);
       cursor: pointer;
+    }
+
+    /* Offscreen Canvas kept active for WebKit / iOS Safari & Android Chrome captureStream */
+    .offscreen-export-canvas {
+      position: fixed;
+      left: -9999px;
+      top: 0;
+      width: 1px;
+      height: 1px;
+      opacity: 0.01;
+      pointer-events: none;
+      z-index: -1;
     }
 
     /* Main Race Card — Default 9:16 Vertical Mobile Portrait Format (460x818) or Wide Mode (820x776) */
@@ -182,6 +217,7 @@
       border: 2px solid var(--border-card);
       position: relative;
       user-select: none;
+      -webkit-user-select: none;
       overflow: hidden;
       display: flex;
       flex-direction: column;
@@ -227,9 +263,7 @@
       overflow: hidden;
     }
 
-    /* Top X-Axis Ticks & Vertical Gridlines (shared horizontal coordinate system with .bars-layer) */
-    /* Left 36px leaves a clean 36px column on the left for 1º..15º rank badges! */
-    /* Right 78px (mobile) / 96px (wide) leaves room for score + weekly gain (+10) */
+    /* Top X-Axis Ticks & Vertical Gridlines */
     .axis-layer {
       position: absolute;
       top: 0;
@@ -270,7 +304,7 @@
       background: var(--grid-line);
     }
 
-    /* Bars Container (identical left/right bounds as .axis-layer so bar lengths match axis 1:1) */
+    /* Bars Container */
     .bars-layer {
       position: absolute;
       top: 38px;
@@ -294,12 +328,12 @@
       display: flex;
       align-items: center;
       will-change: transform, opacity;
-      transition: opacity 0.2s ease, filter 0.15s ease;
+      transition: opacity 0.2s ease;
       cursor: pointer;
     }
 
-    .bar-row:hover {
-      filter: brightness(1.1);
+    .bar-row:active {
+      filter: brightness(1.15);
     }
 
     /* Improvement #1: Fixed Rank Column (1º..15º) on the left of the 0 axis line */
@@ -313,7 +347,7 @@
       font-weight: 700;
       color: #9ca3af;
       line-height: 1;
-      user-select: none;
+      pointer-events: none;
     }
 
     body.wide-mode .bar-rank-badge {
@@ -336,6 +370,7 @@
       justify-content: flex-end;
       overflow: hidden;
       border-radius: 0 2px 2px 0;
+      pointer-events: none;
     }
 
     .bar-row.is-bora .bar-fill {
@@ -360,6 +395,7 @@
       padding-left: 6px;
       letter-spacing: -0.4px;
       line-height: 1;
+      pointer-events: none;
     }
 
     .bar-score-group {
@@ -369,6 +405,7 @@
       gap: 4px;
       margin-left: 6px;
       white-space: nowrap;
+      pointer-events: none;
     }
 
     .bar-score {
@@ -411,7 +448,7 @@
       position: absolute;
       left: 6px;
       right: 10px;
-      top: 370.5px; /* Exact midpoint between Rank 8 bottom (38 + 7*42 + 35 = 367px) and Rank 9 top (38 + 8*42 = 374px) */
+      top: 370.5px;
       height: 0;
       border-top: 2px dashed var(--cutoff-orange);
       z-index: 4;
@@ -455,20 +492,22 @@
 
     /* Bottom Timeline & Play/Pause Controls */
     .timeline-footer {
-      height: 60px;
+      height: 62px;
       flex-shrink: 0;
       padding: 4px 24px 8px 14px;
       display: flex;
       align-items: flex-start;
-      gap: 10px;
+      gap: 12px;
       background: var(--bg-card);
       position: relative;
-      z-index: 6;
+      z-index: 20;
     }
 
     .play-btn {
-      width: 32px;
-      height: 32px;
+      appearance: none;
+      -webkit-appearance: none;
+      width: 36px;
+      height: 36px;
       background: #2c2e33;
       border: 1px solid #494d57;
       border-radius: 50%;
@@ -478,44 +517,54 @@
       justify-content: center;
       cursor: pointer;
       flex-shrink: 0;
-      margin-top: 3px;
-      transition: background 0.15s, border-color 0.15s;
+      margin-top: 1px;
+      position: relative;
+      z-index: 25;
+      transition: background 0.15s, border-color 0.15s, transform 0.1s;
     }
 
-    .play-btn:hover {
-      background: #383b42;
-      border-color: #6c7280;
+    .play-btn:active {
+      transform: scale(0.93);
+    }
+
+    .play-btn svg {
+      pointer-events: none;
     }
 
     .scrubber-container {
       flex: 1;
       position: relative;
-      padding-top: 15px;
+      padding-top: 16px;
+      padding-bottom: 8px;
       cursor: pointer;
+      touch-action: none;
     }
 
     .scrubber-track {
       width: 100%;
-      height: 2px;
+      height: 3px;
       background: #8c8f96;
       position: relative;
+      border-radius: 2px;
     }
 
     .scrubber-progress {
       position: absolute;
       left: 0;
       top: 0;
-      height: 2px;
+      height: 3px;
       background: var(--bar-bora);
       pointer-events: none;
+      border-radius: 2px;
     }
 
     .scrubber-handle {
       position: absolute;
       top: -7px;
-      width: 4px;
-      height: 16px;
+      width: 6px;
+      height: 17px;
       background: #ffffff;
+      border-radius: 2px;
       transform: translateX(-50%);
       pointer-events: none;
       box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
@@ -526,6 +575,7 @@
       width: 100%;
       height: 26px;
       margin-top: 2px;
+      pointer-events: none;
     }
 
     .scrubber-tick {
@@ -598,17 +648,17 @@
       background: rgba(70, 185, 172, 0.1);
       border: 1px solid rgba(70, 185, 172, 0.35);
       border-radius: 6px;
-      padding: 7px 9px;
+      padding: 8px 10px;
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 3px;
       cursor: pointer;
       transition: background 0.15s, transform 0.12s;
     }
 
-    .bora-chip:hover {
-      background: rgba(70, 185, 172, 0.2);
-      transform: translateY(-1px);
+    .bora-chip:active {
+      background: rgba(70, 185, 172, 0.25);
+      transform: scale(0.98);
     }
 
     .bora-chip-top {
@@ -619,6 +669,7 @@
       font-family: var(--font-mono);
       color: #5eead4;
       font-weight: 700;
+      pointer-events: none;
     }
 
     .bora-chip-name {
@@ -628,17 +679,18 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      pointer-events: none;
     }
 
-    /* Modals (Sync Modal & Improvement #2 Player Profile Modal) */
+    /* Modals */
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.76);
+      background: rgba(0, 0, 0, 0.78);
       display: none;
       align-items: center;
       justify-content: center;
-      z-index: 100;
+      z-index: 200;
       padding: 14px;
     }
 
@@ -652,8 +704,9 @@
       border-radius: 12px;
       width: 100%;
       max-width: 460px;
-      max-height: 90vh;
+      max-height: 88vh;
       overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
       padding: 18px;
       font-family: var(--font-sans);
       color: #f3f4f6;
@@ -675,13 +728,20 @@
     }
 
     .modal-close {
-      background: transparent;
-      border: none;
-      color: #9ca3af;
-      font-size: 22px;
-      line-height: 1;
+      appearance: none;
+      -webkit-appearance: none;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 6px;
+      color: #d1d5db;
+      font-size: 20px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       cursor: pointer;
-      padding: 0 4px;
+      flex-shrink: 0;
     }
 
     .form-group {
@@ -704,7 +764,7 @@
       padding: 8px 10px;
       color: #f9fafb;
       font-family: var(--font-mono);
-      font-size: 12px;
+      font-size: 13px;
     }
 
     .form-help {
@@ -719,9 +779,10 @@
       justify-content: flex-end;
       gap: 8px;
       margin-top: 16px;
+      flex-wrap: wrap;
     }
 
-    /* Improvement #2: Player Profile Stats Card Styling */
+    /* Player Profile Stats Card Styling */
     .player-badges-row {
       display: flex;
       flex-wrap: wrap;
@@ -824,6 +885,7 @@
       gap: 5px;
       max-height: 240px;
       overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
       padding-right: 4px;
     }
 
@@ -897,10 +959,10 @@
         </span>
       </div>
       <div style="display:flex; align-items:center; gap:6px;">
-        <button class="btn-tool" id="btnHighlightBora" title="Focar apenas nos jogadores Bora">
+        <button type="button" class="btn-tool" id="btnHighlightBora" title="Focar apenas nos jogadores Bora">
           Destacar Bora
         </button>
-        <button class="btn-tool" id="btnToggleFormat" title="Alternar entre formato Celular (9:16) e Monitor Largo">
+        <button type="button" class="btn-tool" id="btnToggleFormat" title="Alternar entre formato Celular (9:16) e Monitor Largo">
           🖥️ Modo Largo
         </button>
       </div>
@@ -917,18 +979,18 @@
         </select>
       </div>
       <div style="display:flex; align-items:center; gap:6px;">
-        <button class="btn-tool btn-video" id="btnDownloadVideo" title="Gravar e baixar o vídeo completo da animação no formato atual">
+        <button type="button" class="btn-tool btn-video" id="btnDownloadVideo" title="Gravar e baixar o vídeo completo da animação no formato atual">
           ⬇ Baixar Vídeo
         </button>
-        <button class="btn-tool" id="btnOpenSync">
+        <button type="button" class="btn-tool" id="btnOpenSync">
           ⟳ Planilha
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Offscreen High-Res Canvas for Direct Video Recording/Export -->
-  <canvas id="exportCanvas" width="720" height="1280" style="display:none;"></canvas>
+  <!-- Offscreen High-Res Canvas for Direct Video Recording/Export (kept active for iOS Safari & Android Chrome) -->
+  <canvas id="exportCanvas" class="offscreen-export-canvas" width="720" height="1280"></canvas>
 
   <!-- Main Bar Chart Race Card -->
   <div class="race-card" id="raceCard">
@@ -955,7 +1017,7 @@
 
     <!-- Timeline Scrubber & Play/Pause -->
     <div class="timeline-footer">
-      <button class="play-btn" id="playPauseBtn" title="Reproduzir / Pausar">
+      <button type="button" class="play-btn" id="playPauseBtn" title="Reproduzir / Pausar">
         <svg id="iconPause" width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
           <rect x="5" y="4" width="5" height="16" rx="1"></rect>
           <rect x="14" y="4" width="5" height="16" rx="1"></rect>
@@ -992,7 +1054,7 @@
           <div class="modal-title" id="pmName">Nome do Jogador</div>
           <div class="player-badges-row" id="pmBadges"></div>
         </div>
-        <button class="modal-close" id="btnClosePlayerModal">&times;</button>
+        <button type="button" class="modal-close" id="btnClosePlayerModal">&times;</button>
       </div>
 
       <div class="stats-grid">
@@ -1026,12 +1088,33 @@
     </div>
   </div>
 
+  <!-- iOS Safari & Android Mobile Ready Video Download & Share Modal -->
+  <div class="modal-backdrop" id="videoReadyModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">🎬 Vídeo da Corrida Pronto!</div>
+        <button type="button" class="modal-close" id="btnCloseVideoModal">&times;</button>
+      </div>
+      <p style="font-size: 13px; color: #d1d5db; line-height: 1.5; margin-bottom: 14px;">
+        A gravação da animação terminou. No celular (Android ou iPhone) ou computador, use os botões abaixo para enviar direto no WhatsApp ou salvar o arquivo:
+      </p>
+      <div class="modal-actions" style="justify-content: stretch; flex-direction: column; gap: 10px;">
+        <button type="button" class="btn-tool btn-video" id="btnShareVideoNative" style="width: 100%; padding: 10px; font-size: 13px; display: none;">
+          📤 Compartilhar / Salvar no Celular (WhatsApp / Fotos)
+        </button>
+        <a id="btnDirectVideoDownload" class="btn-tool active" href="#" download="rank_modern_race.mp4" style="width: 100%; padding: 10px; font-size: 13px; text-decoration: none; text-align: center;">
+          ⬇ Baixar Arquivo de Vídeo
+        </a>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal for Google Sheets Live Sync / CSV Import -->
   <div class="modal-backdrop" id="syncModal">
     <div class="modal-box">
       <div class="modal-header">
         <div class="modal-title">Conexão com Google Sheets (PRI_Teste)</div>
-        <button class="modal-close" id="btnCloseModal">&times;</button>
+        <button type="button" class="modal-close" id="btnCloseModal">&times;</button>
       </div>
 
       <div class="form-group">
@@ -1055,13 +1138,72 @@
       <div id="syncFeedback" style="font-size: 12px; color: #5eead4; min-height: 18px;"></div>
 
       <div class="modal-actions">
-        <button class="btn-tool" id="btnResetEmbedded">Restaurar Dados Originais</button>
-        <button class="btn-tool active" id="btnFetchLive">Sincronizar Agora</button>
+        <button type="button" class="btn-tool" id="btnResetEmbedded">Restaurar Dados Originais</button>
+        <button type="button" class="btn-tool active" id="btnFetchLive">Sincronizar Agora</button>
       </div>
     </div>
   </div>
 
   <script>
+  (function() {
+    // Self-healing deduplicator in case an editor ever concatenates two HTML copies
+    function deduplicateDOM() {
+      const selectors = ['.top-toolbar', '.race-card', '.bora-summary', '#playerModal', '#videoReadyModal', '#syncModal', '#exportCanvas'];
+      selectors.forEach(sel => {
+        const list = document.querySelectorAll(sel);
+        for (let i = 1; i < list.length; i++) list[i].remove();
+      });
+    }
+    deduplicateDOM();
+    if (window.__RANK_MODERN_INITIALIZED__) return;
+    window.__RANK_MODERN_INITIALIZED__ = true;
+    window.addEventListener('DOMContentLoaded', deduplicateDOM);
+    window.addEventListener('load', deduplicateDOM);
+
+    // Universal Mobile (iOS Safari + Android Chrome/Samsung) & Desktop Tap Handler
+    // Does not call preventDefault() on touchend so Android Chrome preserves full userActivation for downloads/sharing,
+    // while using a 450ms lock so synthesized click never double-fires after touchend.
+    function bindTap(el, handler) {
+      if (!el) return;
+      let lastTouchTime = 0;
+      let startX = 0;
+      let startY = 0;
+
+      el.addEventListener('touchstart', function(e) {
+        if (e.touches && e.touches.length === 1) {
+          startX = e.touches[0].clientX;
+          startY = e.touches[0].clientY;
+        }
+      }, { passive: true });
+
+      el.addEventListener('touchend', function(e) {
+        if (e.changedTouches && e.changedTouches.length === 1) {
+          const dx = Math.abs(e.changedTouches[0].clientX - startX);
+          const dy = Math.abs(e.changedTouches[0].clientY - startY);
+          if (dx < 14 && dy < 14) {
+            const now = Date.now();
+            if (now - lastTouchTime < 300) return;
+            lastTouchTime = now;
+            handler(e);
+          }
+        }
+      }, { passive: true });
+
+      el.addEventListener('click', function(e) {
+        if (Date.now() - lastTouchTime < 480) return;
+        handler(e);
+      });
+    }
+
+    // Fast Portuguese string comparator
+    const ptCollator = (typeof Intl !== 'undefined' && Intl.Collator)
+      ? new Intl.Collator('pt-BR', { sensitivity: 'base' })
+      : null;
+    function compareNames(a, b) {
+      if (ptCollator) return ptCollator.compare(a, b);
+      return a < b ? -1 : (a > b ? 1 : 0);
+    }
+
     // Complete dataset extracted from PRI_Teste (Pontos_ate_semana + RANKING_MODERN + BASE)
     const EMBEDDED_DATA = {"spreadsheetId": "1BjaihYOGkMi5TJyt8fOigRs7er7e0XbHoNbsaU48yy4", "sheetName": "Pontos_ate_semana", "rankingSheetName": "RANKING_MODERN", "spreadsheetTitle": "PRI_Teste", "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1BjaihYOGkMi5TJyt8fOigRs7er7e0XbHoNbsaU48yy4/edit", "dates": ["2/7/26", "9/7/26", "16/7/26", "23/7/26", "30/7/26", "6/8/26", "13/8/26", "20/8/26", "27/8/26", "3/9/26", "10/9/26", "17/9/26", "24/9/26", "1/10/26", "8/10/26"], "players": [{"name": "Eduardo Caruso", "tag": "Bora", "isBora": true, "team": "Bora", "scores": [13.0, 24.0, 31.0, 39.0, 44.0, 55.0, 68.0, 68.0, 78.0, 91.0, 104.0, 129.0, 139.0, 146.0, 156.0], "stats": {"points": 156.0, "wins": 42, "draws": 5, "losses": 17, "matches": 64, "tournaments": 14, "winrate": 65.63}}, {"name": "Deric Sousa", "tag": "", "isBora": false, "team": "", "scores": [0.0, 10.0, 10.0, 21.0, 25.0, 29.0, 42.0, 49.0, 59.0, 70.0, 83.0, 96.0, 97.0, 107.0, 117.0], "stats": {"points": 117.0, "wins": 32, "draws": 2, "losses": 23, "matches": 57, "tournaments": 13, "winrate": 56.14}}, {"name": "Arthur Matos", "tag": "", "isBora": false, "team": "", "scores": [10.0, 20.0, 20.0, 20.0, 30.0, 40.0, 50.0, 50.0, 61.0, 74.0, 75.0, 102.0, 102.0, 102.0, 113.0], "stats": {"points": 113.0, "wins": 29, "draws": 3, "losses": 13, "matches": 45, "tournaments": 10, "winrate": 64.44}}, {"name": "Victor Marques", "tag": "Bora", "isBora": true, "team": "Buera", "scores": [10.0, 21.0, 21.0, 21.0, 31.0, 31.0, 38.0, 38.0, 45.0, 59.0, 70.0, 83.0, 87.0, 98.0, 111.0], "stats": {"points": 111.0, "wins": 30, "draws": 4, "losses": 18, "matches": 52, "tournaments": 11, "winrate": 57.69}}, {"name": "Gamaliel Cardoso", "tag": "", "isBora": false, "team": "", "scores": [8.0, 15.0, 25.0, 29.0, 30.0, 35.0, 48.0, 52.0, 59.0, 63.0, 70.0, 79.0, 87.0, 97.0, 107.0], "stats": {"points": 107.0, "wins": 28, "draws": 4, "losses": 34, "matches": 66, "tournaments": 15, "winrate": 42.42}}, {"name": "Aimbere Mendonça", "tag": "", "isBora": false, "team": "", "scores": [4.0, 11.0, 15.0, 25.0, 32.0, 36.0, 43.0, 47.0, 54.0, 67.0, 74.0, 95.0, 102.0, 106.0, 107.0], "stats": {"points": 107.0, "wins": 27, "draws": 1, "losses": 36, "matches": 64, "tournaments": 15, "winrate": 42.19}}, {"name": "Edgar Bruno", "tag": "Bora", "isBora": true, "team": "Bora", "scores": [0.0, 7.0, 18.0, 25.0, 33.0, 41.0, 51.0, 58.0, 58.0, 65.0, 75.0, 94.0, 95.0, 99.0, 106.0], "stats": {"points": 106.0, "wins": 27, "draws": 3, "losses": 28, "matches": 58, "tournaments": 13, "winrate": 46.55}}, {"name": "Welber Alves", "tag": "", "isBora": false, "team": "", "scores": [10.0, 20.0, 27.0, 27.0, 27.0, 27.0, 27.0, 37.0, 47.0, 57.0, 61.0, 80.0, 80.0, 90.0, 97.0], "stats": {"points": 97.0, "wins": 26, "draws": 0, "losses": 21, "matches": 47, "tournaments": 10, "winrate": 55.32}}, {"name": "Giovanni Santin", "tag": "", "isBora": false, "team": "Fofoletes", "scores": [8.0, 21.0, 21.0, 28.0, 28.0, 28.0, 35.0, 39.0, 52.0, 52.0, 52.0, 71.0, 82.0, 86.0, 96.0], "stats": {"points": 96.0, "wins": 25, "draws": 2, "losses": 19, "matches": 46, "tournaments": 10, "winrate": 54.35}}, {"name": "Joao Flecha", "tag": "", "isBora": false, "team": "", "scores": [7.0, 14.0, 18.0, 22.0, 22.0, 22.0, 29.0, 40.0, 47.0, 54.0, 64.0, 83.0, 93.0, 93.0, 93.0], "stats": {"points": 93.0, "wins": 24, "draws": 1, "losses": 26, "matches": 51, "tournaments": 11, "winrate": 47.06}}, {"name": "Samuel Gomes", "tag": "Bora", "isBora": true, "team": "Bora", "scores": [13.0, 13.0, 24.0, 28.0, 39.0, 39.0, 49.0, 49.0, 50.0, 50.0, 50.0, 63.0, 63.0, 73.0, 87.0], "stats": {"points": 87.0, "wins": 23, "draws": 3, "losses": 13, "matches": 39, "tournaments": 9, "winrate": 58.97}}, {"name": "Ricardo Castro", "tag": "", "isBora": false, "team": "", "scores": [7.0, 14.0, 14.0, 14.0, 21.0, 28.0, 35.0, 42.0, 46.0, 56.0, 61.0, 74.0, 74.0, 78.0, 85.0], "stats": {"points": 85.0, "wins": 22, "draws": 1, "losses": 33, "matches": 56, "tournaments": 12, "winrate": 39.29}}, {"name": "Marcos Teixeira", "tag": "", "isBora": false, "team": "Fofoletes", "scores": [10.0, 24.0, 31.0, 31.0, 31.0, 31.0, 31.0, 31.0, 31.0, 41.0, 49.0, 68.0, 75.0, 82.0, 82.0], "stats": {"points": 82.0, "wins": 21, "draws": 2, "losses": 14, "matches": 37, "tournaments": 8, "winrate": 56.76}}, {"name": "Pedro Paniago", "tag": "", "isBora": false, "team": "", "scores": [4.0, 4.0, 4.0, 4.0, 4.0, 12.0, 12.0, 12.0, 25.0, 25.0, 25.0, 52.0, 62.0, 69.0, 82.0], "stats": {"points": 82.0, "wins": 20, "draws": 2, "losses": 9, "matches": 31, "tournaments": 7, "winrate": 64.52}}, {"name": "Fabio Ancelmo", "tag": "", "isBora": false, "team": "Fofoletes", "scores": [0.0, 4.0, 4.0, 4.0, 11.0, 11.0, 11.0, 21.0, 34.0, 34.0, 34.0, 59.0, 69.0, 69.0, 79.0], "stats": {"points": 79.0, "wins": 20, "draws": 0, "losses": 10, "matches": 30, "tournaments": 7, "winrate": 66.67}}, {"name": "Kalel Alves", "tag": "", "isBora": false, "team": "", "scores": [7.0, 14.0, 21.0, 21.0, 21.0, 21.0, 21.0, 25.0, 32.0, 36.0, 43.0, 60.0, 60.0, 67.0, 77.0], "stats": {"points": 77.0, "wins": 19, "draws": 2, "losses": 26, "matches": 47, "tournaments": 10, "winrate": 40.43}}, {"name": "Pedro Medeiros", "tag": "Bora", "isBora": true, "team": "Andiamo", "scores": [0.0, 0.0, 0.0, 11.0, 19.0, 26.0, 36.0, 43.0, 50.0, 60.0, 60.0, 67.0, 74.0, 75.0, 76.0], "stats": {"points": 76.0, "wins": 20, "draws": 2, "losses": 24, "matches": 46, "tournaments": 11, "winrate": 43.48}}, {"name": "Felipe Pereira", "tag": "", "isBora": false, "team": "", "scores": [13.0, 13.0, 23.0, 24.0, 24.0, 24.0, 35.0, 35.0, 35.0, 35.0, 35.0, 48.0, 55.0, 63.0, 63.0], "stats": {"points": 63.0, "wins": 16, "draws": 2, "losses": 11, "matches": 29, "tournaments": 7, "winrate": 55.17}}, {"name": "Jonathan Melamed", "tag": "", "isBora": false, "team": "", "scores": [0.0, 11.0, 11.0, 19.0, 32.0, 32.0, 32.0, 32.0, 46.0, 46.0, 46.0, 46.0, 46.0, 46.0, 59.0], "stats": {"points": 59.0, "wins": 17, "draws": 3, "losses": 3, "matches": 23, "tournaments": 5, "winrate": 73.91}}, {"name": "Tiago Rubo", "tag": "", "isBora": false, "team": "", "scores": [0.0, 10.0, 10.0, 17.0, 17.0, 21.0, 28.0, 39.0, 49.0, 59.0, 59.0, 59.0, 59.0, 59.0, 59.0], "stats": {"points": 59.0, "wins": 17, "draws": 1, "losses": 14, "matches": 32, "tournaments": 7, "winrate": 53.13}}, {"name": "Leonardo Santiago", "tag": "", "isBora": false, "team": "", "scores": [11.0, 18.0, 22.0, 22.0, 22.0, 22.0, 23.0, 23.0, 33.0, 33.0, 37.0, 58.0, 58.0, 58.0, 58.0], "stats": {"points": 58.0, "wins": 13, "draws": 2, "losses": 15, "matches": 30, "tournaments": 7, "winrate": 43.33}}, {"name": "Bruno Dourado", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 10.0, 17.0, 17.0, 17.0, 24.0, 24.0, 24.0, 31.0, 38.0, 45.0, 45.0, 52.0], "stats": {"points": 52.0, "wins": 14, "draws": 0, "losses": 17, "matches": 31, "tournaments": 7, "winrate": 45.16}}, {"name": "Igor Neiva", "tag": "", "isBora": false, "team": "", "scores": [0.0, 4.0, 4.0, 4.0, 5.0, 5.0, 6.0, 6.0, 6.0, 13.0, 26.0, 39.0, 43.0, 43.0, 48.0], "stats": {"points": 48.0, "wins": 11, "draws": 1, "losses": 20, "matches": 32, "tournaments": 8, "winrate": 34.38}}, {"name": "Vinicius Ferracini", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 11.0, 18.0, 18.0, 25.0, 27.0, 27.0, 40.0, 47.0, 47.0, 47.0], "stats": {"points": 47.0, "wins": 11, "draws": 2, "losses": 15, "matches": 28, "tournaments": 6, "winrate": 39.29}}, {"name": "Victor Capanema", "tag": "", "isBora": false, "team": "", "scores": [4.0, 5.0, 15.0, 19.0, 19.0, 24.0, 34.0, 38.0, 38.0, 45.0, 45.0, 45.0, 45.0, 45.0, 45.0], "stats": {"points": 45.0, "wins": 12, "draws": 1, "losses": 17, "matches": 30, "tournaments": 8, "winrate": 40.0}}, {"name": "Pedro Palhares", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 10.0, 17.0, 24.0, 24.0, 24.0, 24.0, 31.0, 38.0], "stats": {"points": 38.0, "wins": 11, "draws": 0, "losses": 12, "matches": 23, "tournaments": 5, "winrate": 47.83}}, {"name": "Kelsen Moura", "tag": "", "isBora": false, "team": "Cutes", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 11.0, 11.0, 11.0, 11.0, 21.0, 36.0, 36.0, 36.0, 36.0], "stats": {"points": 36.0, "wins": 8, "draws": 1, "losses": 8, "matches": 17, "tournaments": 4, "winrate": 47.06}}, {"name": "Ivan Brandao", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 7.0, 7.0, 7.0, 7.0, 7.0, 21.0, 21.0, 21.0, 21.0, 25.0], "stats": {"points": 25.0, "wins": 7, "draws": 1, "losses": 6, "matches": 14, "tournaments": 3, "winrate": 50.0}}, {"name": "Joao Oliveira", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 14.0, 14.0, 14.0, 14.0, 24.0, 24.0, 24.0, 24.0, 24.0], "stats": {"points": 24.0, "wins": 7, "draws": 1, "losses": 2, "matches": 10, "tournaments": 2, "winrate": 70.0}}, {"name": "Leo Roque", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 7.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 13.0], "stats": {"points": 13.0, "wins": 3, "draws": 1, "losses": 9, "matches": 13, "tournaments": 3, "winrate": 23.08}}, {"name": "John Magic", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 6.0, 6.0, 13.0, 13.0, 13.0, 13.0], "stats": {"points": 13.0, "wins": 2, "draws": 1, "losses": 11, "matches": 14, "tournaments": 3, "winrate": 14.29}}, {"name": "Gustavo Cerqueira", "tag": "", "isBora": false, "team": "", "scores": [0.0, 4.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 12.0, 12.0, 12.0, 12.0, 12.0], "stats": {"points": 12.0, "wins": 3, "draws": 0, "losses": 11, "matches": 14, "tournaments": 3, "winrate": 21.43}}, {"name": "Lucas Andre", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 10.0], "stats": {"points": 10.0, "wins": 3, "draws": 0, "losses": 2, "matches": 5, "tournaments": 1, "winrate": 60.0}}, {"name": "Ricardo Valim", "tag": "", "isBora": false, "team": "", "scores": [0.0, 4.0, 5.0, 5.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0], "stats": {"points": 9.0, "wins": 2, "draws": 0, "losses": 11, "matches": 13, "tournaments": 3, "winrate": 15.38}}, {"name": "Miguel Molina", "tag": "", "isBora": false, "team": "", "scores": [7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0], "stats": {"points": 7.0, "wins": 2, "draws": 0, "losses": 3, "matches": 5, "tournaments": 1, "winrate": 40.0}}, {"name": "Marcus Estrela", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 7.0, 7.0, 7.0, 7.0], "stats": {"points": 7.0, "wins": 1, "draws": 0, "losses": 4, "matches": 5, "tournaments": 1, "winrate": 20.0}}, {"name": "Bruno Guimaraes", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0], "stats": {"points": 4.0, "wins": 1, "draws": 0, "losses": 4, "matches": 5, "tournaments": 1, "winrate": 20.0}}, {"name": "Rafael Misael", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4.0], "stats": {"points": 4.0, "wins": 1, "draws": 0, "losses": 4, "matches": 5, "tournaments": 1, "winrate": 20.0}}, {"name": "Samir Tarilonte", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4.0], "stats": {"points": 4.0, "wins": 1, "draws": 0, "losses": 2, "matches": 3, "tournaments": 1, "winrate": 33.33}}]};
 
@@ -1083,8 +1225,10 @@
     let lastTimestamp = null;
     let isRecordingVideo = false;
     let activeMediaRecorder = null;
+    let lastRecordedFile = null;
+    let lastRecordedUrl = null;
 
-    // Precomputed discrete weekly ranks (weekIndex -> Map(playerName -> 1..N)) for ▲/▼ rank shift indicators
+    // Precomputed discrete weekly ranks (weekIndex -> Map(playerName -> 1..N))
     let discreteWeeklyRanks = [];
 
     // DOM Elements
@@ -1122,11 +1266,17 @@
     const pmBestWeekSub = document.getElementById('pmBestWeekSub');
     const pmHistoryList = document.getElementById('pmHistoryList');
 
+    // Video Ready Modal Elements
+    const videoReadyModal = document.getElementById('videoReadyModal');
+    const btnCloseVideoModal = document.getElementById('btnCloseVideoModal');
+    const btnShareVideoNative = document.getElementById('btnShareVideoNative');
+    const btnDirectVideoDownload = document.getElementById('btnDirectVideoDownload');
+
     // Map of player name -> DOM elements
     let barElements = new Map();
+    let boraChipElements = new Map();
     let axisTickElements = new Map();
 
-    // Format date like in video (e.g., 2/7/26), supporting DD/MM/YYYY, D/M/YY, or gviz Date(YYYY,M,D)
     function normalizeDateLabel(raw) {
       if (!raw) return '';
       const s = String(raw).trim();
@@ -1164,7 +1314,7 @@
         }));
         list.sort((a, b) => {
           if (Math.abs(b.score - a.score) > 0.0001) return b.score - a.score;
-          return a.name.localeCompare(b.name, 'pt-BR');
+          return compareNames(a.name, b.name);
         });
         const rMap = new Map();
         list.forEach((item, idx) => {
@@ -1176,7 +1326,9 @@
 
     function initChartDOM() {
       barsLayer.innerHTML = '';
+      boraChipsContainer.innerHTML = '';
       barElements.clear();
+      boraChipElements.clear();
 
       appData.DatesNormalized = appData.dates.map(normalizeDateLabel);
       computeDiscreteWeeklyRanks();
@@ -1184,14 +1336,14 @@
       const boraPlayers = appData.players.filter(p => p.isBora);
       boraCountBadge.textContent = boraPlayers.length;
 
-      // Create DOM elements for each player
+      // Create persistent DOM elements for each player bar
       appData.players.forEach((player) => {
         const row = document.createElement('div');
         row.className = `bar-row ${player.isBora ? 'is-bora' : 'is-other'}`;
         row.style.transform = `translateY(${(TOP_N + 2) * ROW_STRIDE}px)`;
         row.style.opacity = '0';
-        row.title = `Clique para ver a ficha completa de ${player.name}`;
-        row.addEventListener('click', () => openPlayerModal(player.name));
+        row.title = `Toque para ver a ficha completa de ${player.name}`;
+        bindTap(row, () => openPlayerModal(player.name));
 
         const rankBadge = document.createElement('span');
         rankBadge.className = 'bar-rank-badge';
@@ -1242,6 +1394,39 @@
         });
       });
 
+      // Create persistent DOM elements for Bora summary chips
+      boraPlayers.forEach((player) => {
+        const chip = document.createElement('div');
+        chip.className = 'bora-chip';
+        bindTap(chip, () => openPlayerModal(player.name));
+
+        const topRow = document.createElement('div');
+        topRow.className = 'bora-chip-top';
+
+        const rankSpan = document.createElement('span');
+        rankSpan.textContent = '#1';
+
+        const ptsSpan = document.createElement('span');
+        ptsSpan.textContent = '0 pts';
+
+        topRow.appendChild(rankSpan);
+        topRow.appendChild(ptsSpan);
+
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'bora-chip-name';
+        nameDiv.textContent = player.name;
+
+        chip.appendChild(topRow);
+        chip.appendChild(nameDiv);
+        boraChipsContainer.appendChild(chip);
+
+        boraChipElements.set(player.name, {
+          chip,
+          rankSpan,
+          ptsSpan
+        });
+      });
+
       buildScrubberTicks();
       renderFrame(progressFloat, true);
     }
@@ -1279,7 +1464,6 @@
       });
     }
 
-    // Compute nice X-axis step (5, 10, 20, 50, 100) depending on current max score
     function getAxisStep(maxScore) {
       if (maxScore <= 18) return 5;
       if (maxScore <= 38) return 10;
@@ -1325,35 +1509,32 @@
       const idx1 = Math.min(numDates - 1, idx0 + 1);
       const frac = clampedT - idx0;
 
-      // Active week index for discrete weekly stats (gain & rank shift)
       const activeWeekIdx = frac > 0.55 ? idx1 : idx0;
       const activeDateStr = appData.DatesNormalized[idx0] || '';
-      dateWatermark.textContent = activeDateStr;
-      summaryDateLabel.textContent = `Semana: ${activeDateStr}`;
+      if (dateWatermark.textContent !== activeDateStr) {
+        dateWatermark.textContent = activeDateStr;
+        summaryDateLabel.textContent = `Semana: ${activeDateStr}`;
+      }
 
-      // Update scrubber UI
       const totalPct = numDates > 1 ? (clampedT / (numDates - 1)) * 100 : 100;
       scrubberProgress.style.width = `${totalPct}%`;
       scrubberHandle.style.left = `${totalPct}%`;
 
-      // Interpolate scores for every player
       const currentStandings = appData.players.map((p, originalIdx) => {
         const s0 = p.scores[idx0] || 0;
         const s1 = p.scores[idx1] !== undefined ? p.scores[idx1] : s0;
         const interpScore = s0 + (s1 - s0) * frac;
 
-        // Calculate points gained in the active week
         const prevWeekScore = activeWeekIdx > 0 ? (p.scores[activeWeekIdx - 1] || 0) : 0;
         const curWeekScore = p.scores[activeWeekIdx] || 0;
         const weeklyGain = Math.round(curWeekScore - prevWeekScore);
 
-        // Calculate rank change compared to previous week
         let rankDelta = 0;
         if (activeWeekIdx > 0 && discreteWeeklyRanks[activeWeekIdx] && discreteWeeklyRanks[activeWeekIdx - 1]) {
           const rNow = discreteWeeklyRanks[activeWeekIdx].get(p.name);
           const rPrev = discreteWeeklyRanks[activeWeekIdx - 1].get(p.name);
           if (rNow && rPrev) {
-            rankDelta = rPrev - rNow; // positive = moved up
+            rankDelta = rPrev - rNow;
           }
         }
 
@@ -1368,10 +1549,9 @@
         };
       });
 
-      // Sort descending by interpolated score, tie-break alphabetically
       currentStandings.sort((a, b) => {
         if (Math.abs(b.score - a.score) > 0.0001) return b.score - a.score;
-        return a.name.localeCompare(b.name, 'pt-BR');
+        return compareNames(a.name, b.name);
       });
 
       const maxScore = Math.max(10, currentStandings[0]?.score || 10);
@@ -1379,7 +1559,6 @@
 
       const trackWidth = barsLayer.clientWidth || (isWideMode ? 680 : 346);
 
-      // Update bar positions and strictly proportional widths
       currentStandings.forEach((item, rankIndex) => {
         const dom = barElements.get(item.name);
         if (!dom) return;
@@ -1401,25 +1580,29 @@
         dom.row.style.transform = `translate3d(0, ${yPx.toFixed(2)}px, 0)`;
         dom.fill.style.width = `${widthPct.toFixed(3)}%`;
 
-        // Improvement #1: Update rank badge (1º..15º), score, weekly gain (+pts), and rank shift (▲/▼)
-        dom.rankBadge.textContent = `${rankNum}º`;
+        const rankText = `${rankNum}º`;
+        if (dom.rankBadge.textContent !== rankText) dom.rankBadge.textContent = rankText;
         dom.rankBadge.classList.toggle('top8', rankNum <= 8);
 
-        dom.scoreSpan.textContent = item.displayScore;
-        dom.gainSpan.textContent = item.weeklyGain > 0 ? `+${item.weeklyGain}` : '';
+        const scoreText = String(item.displayScore);
+        if (dom.scoreSpan.textContent !== scoreText) dom.scoreSpan.textContent = scoreText;
+
+        const gainText = item.weeklyGain > 0 ? `+${item.weeklyGain}` : '';
+        if (dom.gainSpan.textContent !== gainText) dom.gainSpan.textContent = gainText;
 
         if (item.rankDelta > 0) {
-          dom.shiftSpan.textContent = `▲${item.rankDelta}`;
+          const sTxt = `▲${item.rankDelta}`;
+          if (dom.shiftSpan.textContent !== sTxt) dom.shiftSpan.textContent = sTxt;
           dom.shiftSpan.className = 'bar-rank-shift up';
         } else if (item.rankDelta < 0) {
-          dom.shiftSpan.textContent = `▼${Math.abs(item.rankDelta)}`;
+          const sTxt = `▼${Math.abs(item.rankDelta)}`;
+          if (dom.shiftSpan.textContent !== sTxt) dom.shiftSpan.textContent = sTxt;
           dom.shiftSpan.className = 'bar-rank-shift down';
         } else {
-          dom.shiftSpan.textContent = '';
+          if (dom.shiftSpan.textContent !== '') dom.shiftSpan.textContent = '';
           dom.shiftSpan.className = 'bar-rank-shift';
         }
 
-        // Auto-fit font size inside bar so every player's full name is always readable
         const barPx = (widthPct / 100) * trackWidth;
         const maxFontSize = isWideMode ? 18.5 : 18.0;
         const charFactor = 0.58;
@@ -1428,55 +1611,44 @@
         const fittedFont = Math.max(10.0, Math.min(maxFontSize, idealFont));
         dom.nameSpan.style.fontSize = `${fittedFont.toFixed(1)}px`;
 
-        if (isVisible) {
-          dom.row.style.opacity = '1';
-        } else {
-          dom.row.style.opacity = '0';
-        }
+        dom.row.style.opacity = isVisible ? '1' : '0';
+        dom.row.style.pointerEvents = isVisible ? 'auto' : 'none';
 
         if (spotlightBoraOnly && !item.isBora) {
           dom.row.classList.add('dimmed');
         } else {
           dom.row.classList.remove('dimmed');
         }
+
+        if (item.isBora) {
+          const chipDom = boraChipElements.get(item.name);
+          if (chipDom) {
+            const rLabel = `#${rankNum} ${rankNum <= 8 ? '★ TOP 8' : ''}`;
+            const pLabel = `${item.displayScore} pts${item.weeklyGain > 0 ? ` (+${item.weeklyGain})` : ''}`;
+            if (chipDom.rankSpan.textContent !== rLabel) chipDom.rankSpan.textContent = rLabel;
+            if (chipDom.ptsSpan.textContent !== pLabel) chipDom.ptsSpan.textContent = pLabel;
+            chipDom.chip.style.order = String(rankNum);
+          }
+        }
       });
 
-      // Update Bora real-time summary cards below the chart
-      const boraStandings = currentStandings
-        .map((item, idx) => ({ ...item, rank: idx + 1 }))
-        .filter(item => item.isBora);
-
-      boraChipsContainer.innerHTML = boraStandings.map(b => `
-        <div class="bora-chip" onclick="openPlayerModal('${b.name.replace(/'/g, "\\'")}')">
-          <div class="bora-chip-top">
-            <span>#${b.rank} ${b.rank <= 8 ? '★ TOP 8' : ''}</span>
-            <span>${b.displayScore} pts ${b.weeklyGain > 0 ? `<span style="color:#4ade80;">(+${b.weeklyGain})</span>` : ''}</span>
-          </div>
-          <div class="bora-chip-name" title="${b.name}">${b.name}</div>
-        </div>
-      `).join('');
-
-      // If currently recording video, also render the exact frame onto exportCanvas
       if (isRecordingVideo) {
         drawRaceCardToCanvas(clampedT, currentStandings, maxScore, activeDateStr, totalPct);
       }
     }
 
-    // Improvement #2: Open Player Profile Modal with RANKING_MODERN Stats & Weekly History
-    window.openPlayerModal = function(playerName) {
+    function openPlayerModal(playerName) {
       const player = appData.players.find(p => p.name.toLowerCase() === String(playerName).toLowerCase());
       if (!player) return;
 
-      // Pause animation while inspecting player profile
       isPlaying = false;
       updatePlayPauseIcons();
 
-      // Compute final standing rank
       const finalSorted = [...appData.players].sort((a, b) => {
         const sa = a.scores[a.scores.length - 1] || 0;
         const sb = b.scores[b.scores.length - 1] || 0;
         if (Math.abs(sb - sa) > 0.0001) return sb - sa;
-        return a.name.localeCompare(b.name, 'pt-BR');
+        return compareNames(a.name, b.name);
       });
       const finalRank = finalSorted.findIndex(p => p.name === player.name) + 1;
       const finalScore = Math.round(player.scores[player.scores.length - 1] || 0);
@@ -1516,7 +1688,6 @@
       pmRecord.textContent = `${wins}V - ${draws}E - ${losses}D`;
       pmMatchesSub.textContent = `${matches} partidas registradas`;
 
-      // Find best weekly gain
       let bestGain = 0;
       let bestDate = '-';
       player.scores.forEach((sc, idx) => {
@@ -1531,7 +1702,6 @@
       pmTournaments.textContent = `${tourneys} torneios`;
       pmBestWeekSub.textContent = bestGain > 0 ? `Melhor semana: +${bestGain} pts (${bestDate})` : 'Sem pontos registrados';
 
-      // Build weekly history rows
       const maxPlayerScore = Math.max(1, finalScore);
       const historyRowsHtml = appData.DatesNormalized.map((dLabel, idx) => {
         const cur = Math.round(player.scores[idx] || 0);
@@ -1556,15 +1726,17 @@
 
       pmHistoryList.innerHTML = historyRowsHtml;
       playerModal.classList.add('open');
-    };
+    }
 
-    btnClosePlayerModal.addEventListener('click', () => playerModal.classList.remove('open'));
+    window.openPlayerModal = openPlayerModal;
+
+    bindTap(btnClosePlayerModal, () => playerModal.classList.remove('open'));
     playerModal.addEventListener('click', (e) => {
       if (e.target === playerModal) playerModal.classList.remove('open');
     });
 
-    // Improvement #4: Toggle Format Button (📱 9:16 Celular vs 🖥️ Largo)
-    btnToggleFormat.addEventListener('click', () => {
+    // Toggle Format Button (📱 9:16 Celular vs 🖥️ Largo)
+    bindTap(btnToggleFormat, () => {
       isWideMode = !isWideMode;
       document.body.classList.toggle('wide-mode', isWideMode);
       if (isWideMode) {
@@ -1582,7 +1754,7 @@
       renderFrame(progressFloat, true);
     });
 
-    // Pixel-accurate 2D Canvas renderer supporting BOTH 9:16 Mobile (460x818 -> 720x1280) and Wide (820x776)
+    // 2D Canvas renderer for video export
     function drawRaceCardToCanvas(clampedT, currentStandings, maxScore, activeDateStr, totalPct) {
       const ctx = exportCanvas.getContext('2d');
       const W = isWideMode ? 820 : 460;
@@ -1594,14 +1766,12 @@
       ctx.save();
       ctx.setTransform(scaleX, 0, 0, scaleY, 0, 0);
 
-      // 1. Card background & outer border
       ctx.fillStyle = '#25262b';
       ctx.fillRect(0, 0, W, H);
       ctx.strokeStyle = '#dcdcdc';
       ctx.lineWidth = 2;
       ctx.strokeRect(1, 1, W - 2, H - 2);
 
-      // 2. Header ("Rank Modern")
       ctx.strokeStyle = '#dcdcdc';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
@@ -1615,7 +1785,6 @@
       ctx.textBaseline = 'middle';
       ctx.fillText('Rank Modern', 14, 23);
 
-      // 3. Chart geometry
       const stageTop = 46;
       const footerH = 60;
       const stageH = H - stageTop - footerH;
@@ -1624,7 +1793,6 @@
       const trackW = xRight - xLeft;
       const barsTop = stageTop + 38;
 
-      // 4. Draw visible bars
       ctx.save();
       ctx.beginPath();
       ctx.rect(2, stageTop + 1, W - 4, stageH - 2);
@@ -1650,18 +1818,15 @@
           ctx.globalAlpha = 1.0;
         }
 
-        // Rank badge on the left of 0 axis (1º..15º)
         ctx.fillStyle = rankNum <= 8 ? '#facc15' : '#9ca3af';
         ctx.font = `700 ${isWideMode ? 13 : 12}px ${monoFont}`;
         ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
         ctx.fillText(`${rankNum}º`, xLeft - 5, y + BAR_HEIGHT / 2 + 0.5);
 
-        // Bar fill
         ctx.fillStyle = item.isBora ? '#46b9ac' : '#d36566';
         ctx.fillRect(xLeft, y, barW, BAR_HEIGHT);
 
-        // Player name inside bar (clipped to bar width)
         ctx.save();
         ctx.beginPath();
         ctx.rect(xLeft, y, barW, BAR_HEIGHT);
@@ -1680,7 +1845,6 @@
         ctx.fillText(item.name, xLeft + barW - 8, y + BAR_HEIGHT / 2 + 0.5);
         ctx.restore();
 
-        // Score outside bar
         const scoreFontSz = isWideMode ? 19 : 16.5;
         ctx.fillStyle = '#ffffff';
         ctx.font = `700 ${scoreFontSz}px ${monoFont}`;
@@ -1689,7 +1853,6 @@
         const scoreStr = String(item.displayScore);
         ctx.fillText(scoreStr, xLeft + barW + 6, y + BAR_HEIGHT / 2 + 0.5);
 
-        // Weekly gain (+pts) next to score
         if (item.weeklyGain > 0) {
           const scoreWidth = ctx.measureText(scoreStr).width;
           ctx.fillStyle = '#4ade80';
@@ -1700,7 +1863,6 @@
         ctx.restore();
       });
 
-      // 5. X-Axis Ticks & Vertical Gridlines (drawn over bars)
       const step = getAxisStep(maxScore);
       for (let v = 0; v <= maxScore; v += step) {
         const x = xLeft + (maxScore > 0 ? (v / maxScore) * trackW : 0);
@@ -1718,7 +1880,6 @@
         ctx.stroke();
       }
 
-      // 6. Top 8 Cutoff Dashed Line
       const cutoffY = stageTop + 370.5;
       ctx.save();
       ctx.strokeStyle = '#dba74e';
@@ -1737,7 +1898,6 @@
       ctx.fillText('— CORTE TOP 8 —', W - 12, cutoffY - 4);
       ctx.restore();
 
-      // 7. Large Date Watermark in bottom-right
       ctx.save();
       ctx.fillStyle = '#ffffff';
       ctx.font = `700 ${isWideMode ? 31 : 26}px ${monoFont}`;
@@ -1749,9 +1909,8 @@
       ctx.fillText(activeDateStr, W - 14, stageTop + stageH - 24);
       ctx.restore();
 
-      ctx.restore(); // end chart stage clip
+      ctx.restore();
 
-      // 8. Bottom Timeline Scrubber Footer
       const footerTop = stageTop + stageH;
       const btnCx = 14 + 16;
       const btnCy = footerTop + 5 + 16;
@@ -1763,12 +1922,10 @@
       ctx.fill();
       ctx.stroke();
 
-      // Pause icon inside button
       ctx.fillStyle = '#e5e7eb';
       ctx.fillRect(btnCx - 4.5, btnCy - 5.5, 3, 11);
       ctx.fillRect(btnCx + 1.5, btnCy - 5.5, 3, 11);
 
-      // Scrubber track
       const scrubLeft = 56;
       const scrubRight = W - 26;
       const scrubW = scrubRight - scrubLeft;
@@ -1781,12 +1938,10 @@
       ctx.fillStyle = '#46b9ac';
       ctx.fillRect(scrubLeft, scrubY, progW, 2);
 
-      // Scrubber handle
       const handleX = scrubLeft + progW;
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(handleX - 2, scrubY - 7, 4, 16);
 
-      // Scrubber ticks & labels
       const n = appData.DatesNormalized.length;
       if (n > 1) {
         const labelStep = isWideMode
@@ -1817,6 +1972,7 @@
     function getSupportedVideoConfig() {
       const candidates = [
         { mimeType: 'video/mp4;codecs=avc1.42E01E', ext: 'mp4' },
+        { mimeType: 'video/mp4;codecs=avc1', ext: 'mp4' },
         { mimeType: 'video/mp4', ext: 'mp4' },
         { mimeType: 'video/webm;codecs=vp9', ext: 'webm' },
         { mimeType: 'video/webm;codecs=vp8', ext: 'webm' },
@@ -1824,22 +1980,25 @@
       ];
       if (typeof MediaRecorder !== 'undefined') {
         for (const c of candidates) {
-          if (!c.mimeType || MediaRecorder.isTypeSupported(c.mimeType)) {
-            return c;
-          }
+          try {
+            if (!c.mimeType || (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(c.mimeType))) {
+              return c;
+            }
+          } catch (e) {}
         }
       }
-      return { mimeType: '', ext: 'webm' };
+      return { mimeType: '', ext: 'mp4' };
     }
 
     function startOrStopVideoExport() {
       if (isRecordingVideo && activeMediaRecorder) {
-        activeMediaRecorder.stop();
+        try { activeMediaRecorder.stop(); } catch (e) {}
         return;
       }
 
-      if (typeof MediaRecorder === 'undefined' || !exportCanvas.captureStream) {
-        alert('Seu navegador não suporta gravação de vídeo direta via HTML5 Canvas.');
+      const captureFn = exportCanvas.captureStream || exportCanvas.webkitCaptureStream;
+      if (typeof MediaRecorder === 'undefined' || !captureFn) {
+        alert('Seu navegador atual não suporta gravação de vídeo via Canvas. No celular, abra no Chrome ou Safari atualizado.');
         return;
       }
 
@@ -1851,14 +2010,26 @@
       isPlaying = false;
       renderFrame(0, true);
 
-      const stream = exportCanvas.captureStream(30);
+      let stream;
+      try {
+        stream = captureFn.call(exportCanvas, 30);
+      } catch (err) {
+        stream = captureFn.call(exportCanvas);
+      }
+
       const options = { videoBitsPerSecond: 6000000 };
       if (config.mimeType) options.mimeType = config.mimeType;
 
       try {
         activeMediaRecorder = new MediaRecorder(stream, options);
       } catch (e) {
-        activeMediaRecorder = new MediaRecorder(stream);
+        try {
+          activeMediaRecorder = new MediaRecorder(stream);
+        } catch (err2) {
+          isRecordingVideo = false;
+          alert('Não foi possível iniciar o gravador de vídeo neste dispositivo: ' + err2.message);
+          return;
+        }
       }
 
       activeMediaRecorder.ondataavailable = (ev) => {
@@ -1871,22 +2042,42 @@
         btnDownloadVideo.classList.remove('recording');
         btnDownloadVideo.textContent = '⬇ Baixar Vídeo';
 
-        const blobType = config.mimeType || 'video/webm';
+        const blobType = config.mimeType || 'video/mp4';
         const blob = new Blob(chunks, { type: blobType });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
+        if (lastRecordedUrl) URL.revokeObjectURL(lastRecordedUrl);
+        lastRecordedUrl = URL.createObjectURL(blob);
+
         const suffix = isWideMode ? 'wide' : 'mobile';
-        a.download = `rank_modern_race_${suffix}.${config.ext}`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(url), 10000);
+        const fileName = `rank_modern_race_${suffix}.${config.ext}`;
+
+        try {
+          lastRecordedFile = new File([blob], fileName, { type: blobType });
+        } catch (e) {
+          lastRecordedFile = null;
+        }
+
+        btnDirectVideoDownload.href = lastRecordedUrl;
+        btnDirectVideoDownload.download = fileName;
+
+        const canShareFile = !!(navigator.canShare && lastRecordedFile && navigator.canShare({ files: [lastRecordedFile] }));
+        btnShareVideoNative.style.display = canShareFile ? 'inline-flex' : 'none';
+
+        const isMobile = /Android|iPad|iPhone|iPod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        if (!isMobile) {
+          const a = document.createElement('a');
+          a.href = lastRecordedUrl;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        }
+        // Always show the ready modal on mobile (Android & iPhone) so the user can 1-tap Share to WhatsApp or Download
+        videoReadyModal.classList.add('open');
       };
 
       btnDownloadVideo.classList.add('recording');
       btnDownloadVideo.textContent = '⏹ Gravando (0%)...';
-      activeMediaRecorder.start(100);
+      activeMediaRecorder.start(200);
 
       setTimeout(() => {
         if (!isRecordingVideo) return;
@@ -1896,7 +2087,23 @@
       }, 350);
     }
 
-    btnDownloadVideo.addEventListener('click', startOrStopVideoExport);
+    bindTap(btnDownloadVideo, startOrStopVideoExport);
+
+    bindTap(btnCloseVideoModal, () => videoReadyModal.classList.remove('open'));
+    videoReadyModal.addEventListener('click', (e) => {
+      if (e.target === videoReadyModal) videoReadyModal.classList.remove('open');
+    });
+
+    bindTap(btnShareVideoNative, async () => {
+      if (lastRecordedFile && navigator.share) {
+        try {
+          await navigator.share({
+            files: [lastRecordedFile],
+            title: 'Rank Modern — Corrida Top 8'
+          });
+        } catch (err) {}
+      }
+    });
 
     function updatePlayPauseIcons() {
       if (isPlaying) {
@@ -1909,13 +2116,17 @@
     }
 
     function animationLoop(timestamp) {
-      if (!lastTimestamp) lastTimestamp = timestamp;
-      const dt = timestamp - lastTimestamp;
-      lastTimestamp = timestamp;
+      const now = (typeof timestamp === 'number' && timestamp > 0) ? timestamp : performance.now();
+      if (!lastTimestamp) lastTimestamp = now;
+      const dt = Math.max(0, Math.min(200, now - lastTimestamp));
+      lastTimestamp = now;
+
+      let needsRender = false;
 
       if (isPlaying && appData.dates.length > 1) {
         const step = (dt / BASE_DURATION_PER_WEEK) * speedMultiplier;
         progressFloat += step;
+        needsRender = true;
 
         if (isRecordingVideo) {
           const pct = Math.min(100, Math.round((progressFloat / (appData.dates.length - 1)) * 100));
@@ -1931,24 +2142,29 @@
             btnDownloadVideo.textContent = '⏳ Finalizando vídeo...';
             setTimeout(() => {
               if (activeMediaRecorder && activeMediaRecorder.state !== 'inactive') {
-                activeMediaRecorder.stop();
+                try { activeMediaRecorder.stop(); } catch (e) {}
               }
             }, 1200);
           }
         }
+      } else if (isRecordingVideo) {
+        needsRender = true;
       }
 
-      renderFrame(progressFloat, false);
+      if (needsRender) {
+        renderFrame(progressFloat, false);
+      }
       requestAnimationFrame(animationLoop);
     }
 
     // Play / Pause button
-    playPauseBtn.addEventListener('click', () => {
+    bindTap(playPauseBtn, () => {
       if (!isPlaying && progressFloat >= appData.dates.length - 1) {
         progressFloat = 0;
         renderFrame(0, true);
       }
       isPlaying = !isPlaying;
+      lastTimestamp = null;
       updatePlayPauseIcons();
     });
 
@@ -1956,7 +2172,13 @@
     let isDraggingScrubber = false;
     function seekFromEvent(e) {
       const rect = scrubberContainer.getBoundingClientRect();
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      if (!rect.width) return;
+      let clientX = e.clientX;
+      if (e.touches && e.touches.length > 0) {
+        clientX = e.touches[0].clientX;
+      } else if (e.changedTouches && e.changedTouches.length > 0) {
+        clientX = e.changedTouches[0].clientX;
+      }
       const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
       progressFloat = ratio * Math.max(0, appData.dates.length - 1);
       renderFrame(progressFloat, true);
@@ -1968,14 +2190,18 @@
     });
     scrubberContainer.addEventListener('touchstart', (e) => {
       isDraggingScrubber = true;
+      if (e.cancelable) e.preventDefault();
       seekFromEvent(e);
-    }, { passive: true });
+    }, { passive: false });
     window.addEventListener('mousemove', (e) => {
       if (isDraggingScrubber) seekFromEvent(e);
     });
     window.addEventListener('touchmove', (e) => {
-      if (isDraggingScrubber) seekFromEvent(e);
-    }, { passive: true });
+      if (isDraggingScrubber) {
+        if (e.cancelable) e.preventDefault();
+        seekFromEvent(e);
+      }
+    }, { passive: false });
     window.addEventListener('mouseup', () => {
       isDraggingScrubber = false;
     });
@@ -1984,10 +2210,10 @@
     });
 
     // Highlight Bora toggle
-    btnHighlightBora.addEventListener('click', () => {
+    bindTap(btnHighlightBora, () => {
       spotlightBoraOnly = !spotlightBoraOnly;
       btnHighlightBora.classList.toggle('active', spotlightBoraOnly);
-      renderFrame(progressFloat, false);
+      renderFrame(progressFloat, true);
     });
 
     // Speed selector
@@ -2006,15 +2232,17 @@
     const inputCsvFile = document.getElementById('inputCsvFile');
     const syncFeedback = document.getElementById('syncFeedback');
 
-    btnOpenSync.addEventListener('click', () => syncModal.classList.add('open'));
-    btnCloseModal.addEventListener('click', () => syncModal.classList.remove('open'));
+    bindTap(btnOpenSync, () => syncModal.classList.add('open'));
+    bindTap(btnCloseModal, () => syncModal.classList.remove('open'));
+    syncModal.addEventListener('click', (e) => {
+      if (e.target === syncModal) syncModal.classList.remove('open');
+    });
 
     function extractSheetId(raw) {
       const match = String(raw).match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
       return match ? match[1] : String(raw).trim();
     }
 
-    // Google Visualization API JSONP loader (bypasses CORS when sheet is shared)
     function fetchFromGoogleSheetsJSONP(sheetId, sheetName) {
       return new Promise((resolve, reject) => {
         const callbackName = 'gvizCallback_' + Math.random().toString(36).substring(2, 9);
@@ -2057,7 +2285,6 @@
       'pedro medeiros'
     ]);
 
-    // Map existing embedded stats/teams by player name for fallback when syncing live
     const embeddedMetaByPlayer = new Map();
     EMBEDDED_DATA.players.forEach(p => {
       embeddedMetaByPlayer.set(p.name.toLowerCase(), {
@@ -2155,7 +2382,6 @@
       });
     }
 
-    // Parse CSV text fallback
     function parseCSVContent(csvText) {
       const lines = csvText.split(/\r?\n/).filter(l => l.trim().length > 0);
       if (lines.length < 2) throw new Error('CSV vazio ou inválido.');
@@ -2213,7 +2439,7 @@
       return { dates, players };
     }
 
-    btnFetchLive.addEventListener('click', async () => {
+    bindTap(btnFetchLive, async () => {
       const sheetId = extractSheetId(inputSheetId.value);
       const sheetName = inputSheetName.value.trim() || 'Pontos_ate_semana';
       syncFeedback.style.color = '#9ca3af';
@@ -2260,7 +2486,7 @@
       reader.readAsText(file);
     });
 
-    btnResetEmbedded.addEventListener('click', () => {
+    bindTap(btnResetEmbedded, () => {
       appData = JSON.parse(JSON.stringify(EMBEDDED_DATA));
       progressFloat = 0;
       isPlaying = true;
@@ -2289,6 +2515,7 @@
       .catch(() => {
         // Keep embedded PRI_Teste data seamlessly
       });
+  })();
   </script>
 </body>
 </html>
