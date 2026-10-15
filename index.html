@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
   <title>Rank Modern — Corrida Top 8 (PRI_Teste)</title>
 
-  <!-- Improvement #6: Rich Open Graph & WhatsApp Link Preview Meta Tags -->
-  <meta name="description" content="Acompanhe a evolução semanal da corrida pelo Top 8 do Ranking Modern (PRI_Teste), com destaque para os jogadores Bora, ganhos por semana e estatísticas de Winrate." />
+  <!-- Rich Open Graph & WhatsApp Link Preview Meta Tags -->
+  <meta name="description" content="Acompanhe a evolução semanal da corrida pelo Top 8 do Ranking Modern (PRI_Teste), com destaque para os jogadores Bora, MVP da semana e estatísticas de Winrate." />
   <meta name="theme-color" content="#46b9ac" />
   <meta property="og:type" content="website" />
   <meta property="og:locale" content="pt_BR" />
   <meta property="og:site_name" content="Rank Modern — Inside / PRI_Teste" />
   <meta property="og:title" content="Rank Modern — Corrida pelo Top 8 (Bar Chart Race)" />
-  <meta property="og:description" content="Gráfico animado semana a semana do Ranking Modern com destaque para os jogadores Bora, linha de corte do Top 8 e ficha completa de Winrate e vitórias." />
+  <meta property="og:description" content="Gráfico animado semana a semana do Ranking Modern com destaque para os jogadores Bora, MVP de cada etapa, linha de corte do Top 8 e ficha completa de Winrate." />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Rank Modern — Corrida pelo Top 8 (Bar Chart Race)" />
   <meta name="twitter:description" content="Gráfico interativo semana a semana do Ranking Modern com destaque para os jogadores Bora e estatísticas completas." />
@@ -57,7 +57,7 @@
       overflow-x: hidden;
     }
 
-    /* Top Control Bar — Adapts width to Mobile (460px) or Wide (820px) */
+    /* Top Control Bar — Clean single-row toolbar */
     .top-toolbar {
       width: 100%;
       max-width: 460px;
@@ -65,9 +65,9 @@
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
+      gap: 6px;
       margin-bottom: 10px;
-      padding: 10px 12px;
+      padding: 9px 11px;
       background: #1e2025;
       border: 1px solid #343740;
       border-radius: 8px;
@@ -80,46 +80,6 @@
 
     body.wide-mode .top-toolbar {
       max-width: 820px;
-    }
-
-    .toolbar-group {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
-      width: 100%;
-      justify-content: space-between;
-    }
-
-    .toolbar-group + .toolbar-group {
-      padding-top: 8px;
-      border-top: 1px solid rgba(255, 255, 255, 0.06);
-    }
-
-    .legend-cluster {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
-    .legend-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 11.5px;
-      font-weight: 600;
-      color: #e5e7eb;
-      background: rgba(255, 255, 255, 0.05);
-      padding: 4px 8px;
-      border-radius: 999px;
-    }
-
-    .legend-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 2px;
-      display: inline-block;
     }
 
     button, select, .bar-row, .bora-chip {
@@ -189,7 +149,7 @@
       color: #f3f4f6;
       border: 1px solid #454954;
       border-radius: 6px;
-      padding: 5px 8px;
+      padding: 5px 7px;
       min-height: 32px;
       font-size: 12px;
       font-family: var(--font-sans);
@@ -236,7 +196,8 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 14px;
+      gap: 8px;
+      padding: 0 12px 0 14px;
       border-bottom: 1.5px solid var(--border-card);
     }
 
@@ -246,13 +207,33 @@
       font-weight: 700;
       color: #ffffff;
       letter-spacing: -0.3px;
+      flex-shrink: 0;
     }
 
-    .card-subtitle-hint {
-      font-family: var(--font-sans);
-      font-size: 11px;
-      color: #9ca3af;
-      font-weight: 500;
+    /* Suggestion #2: Dynamic Weekly MVP Badge in Header */
+    .mvp-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(251, 191, 36, 0.13);
+      border: 1px solid rgba(251, 191, 36, 0.45);
+      color: #fde047;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 295px;
+      line-height: 1.1;
+    }
+
+    body.wide-mode .mvp-badge {
+      font-size: 12px;
+      max-width: 580px;
+      padding: 4px 10px;
     }
 
     /* Chart Body */
@@ -336,7 +317,7 @@
       filter: brightness(1.15);
     }
 
-    /* Improvement #1: Fixed Rank Column (1º..15º) on the left of the 0 axis line */
+    /* Fixed Rank Column (1º..15º) on the left of the 0 axis line */
     .bar-rank-badge {
       position: absolute;
       left: -34px;
@@ -371,18 +352,14 @@
       overflow: hidden;
       border-radius: 0 2px 2px 0;
       pointer-events: none;
-    }
-
-    .bar-row.is-bora .bar-fill {
-      background-color: var(--bar-bora);
-    }
-
-    .bar-row.is-other .bar-fill {
+      /* Default: ALL bars are red (#d36566) until "Destacar Bora" is clicked */
       background-color: var(--bar-other);
+      transition: background-color 0.2s ease;
     }
 
-    .bar-row.dimmed {
-      opacity: 0.22 !important;
+    /* When "Destacar Bora" is active on body, Bora bars turn turquoise (#46b9ac) */
+    body.highlight-bora .bar-row.is-bora .bar-fill {
+      background-color: var(--bar-bora);
     }
 
     .bar-name {
@@ -744,36 +721,6 @@
       flex-shrink: 0;
     }
 
-    .form-group {
-      margin-bottom: 14px;
-    }
-
-    .form-label {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      color: #d1d5db;
-      margin-bottom: 6px;
-    }
-
-    .form-input {
-      width: 100%;
-      background: #141518;
-      border: 1px solid #373a44;
-      border-radius: 6px;
-      padding: 8px 10px;
-      color: #f9fafb;
-      font-family: var(--font-mono);
-      font-size: 13px;
-    }
-
-    .form-help {
-      font-size: 11px;
-      color: #9ca3af;
-      margin-top: 5px;
-      line-height: 1.45;
-    }
-
     .modal-actions {
       display: flex;
       justify-content: flex-end;
@@ -945,31 +892,19 @@
 </head>
 <body>
 
-  <!-- Top Controls & Filter Bar -->
+  <!-- Top Controls & Filter Bar (Legend and Planilha button removed per user request) -->
   <div class="top-toolbar">
-    <div class="toolbar-group">
-      <div class="legend-cluster">
-        <span class="legend-pill">
-          <span class="legend-dot" style="background: var(--bar-bora);"></span>
-          Bora (<span id="boraCountBadge">5</span>)
-        </span>
-        <span class="legend-pill">
-          <span class="legend-dot" style="background: var(--bar-other);"></span>
-          Demais
-        </span>
-      </div>
-      <div style="display:flex; align-items:center; gap:6px;">
-        <button type="button" class="btn-tool" id="btnHighlightBora" title="Focar apenas nos jogadores Bora">
-          Destacar Bora
-        </button>
-        <button type="button" class="btn-tool" id="btnToggleFormat" title="Alternar entre formato Celular (9:16) e Monitor Largo">
-          🖥️ Modo Largo
-        </button>
-      </div>
+    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+      <button type="button" class="btn-tool" id="btnHighlightBora" title="Pintar os jogadores do Bora em azul-turquesa">
+        Destacar Bora
+      </button>
+      <button type="button" class="btn-tool" id="btnToggleFormat" title="Alternar entre formato Celular (9:16) e Monitor Largo">
+        🖥️ Modo Largo
+      </button>
     </div>
 
-    <div class="toolbar-group">
-      <div style="display:flex; align-items:center; gap:5px;">
+    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+      <div style="display:flex; align-items:center; gap:4px;">
         <label for="speedSelect" style="font-size: 11.5px; color: #9ca3af;">Vel.:</label>
         <select id="speedSelect" class="speed-select">
           <option value="0.5">0.5x</option>
@@ -978,25 +913,23 @@
           <option value="2">2.0x</option>
         </select>
       </div>
-      <div style="display:flex; align-items:center; gap:6px;">
-        <button type="button" class="btn-tool btn-video" id="btnDownloadVideo" title="Gravar e baixar o vídeo completo da animação no formato atual">
-          ⬇ Baixar Vídeo
-        </button>
-        <button type="button" class="btn-tool" id="btnOpenSync">
-          ⟳ Planilha
-        </button>
-      </div>
+      <button type="button" class="btn-tool btn-video" id="btnDownloadVideo" title="Gravar e baixar o vídeo completo da animação">
+        ⬇ Baixar Vídeo
+      </button>
     </div>
   </div>
 
-  <!-- Offscreen High-Res Canvas for Direct Video Recording/Export (kept active for iOS Safari & Android Chrome) -->
+  <!-- Offscreen High-Res Canvas for Direct Video Recording/Export -->
   <canvas id="exportCanvas" class="offscreen-export-canvas" width="720" height="1280"></canvas>
 
   <!-- Main Bar Chart Race Card -->
   <div class="race-card" id="raceCard">
     <div class="card-header">
       <div class="card-title">Rank Modern</div>
-      <div class="card-subtitle-hint">Toque em um jogador para ver a ficha</div>
+      <!-- Suggestion #2: Dynamic Weekly MVP Badge -->
+      <div class="mvp-badge" id="mvpBanner" title="Maior pontuador da semana atual">
+        🔥 MVP: —
+      </div>
     </div>
 
     <div class="chart-stage" id="chartStage">
@@ -1046,7 +979,7 @@
     <div class="bora-chips" id="boraChipsContainer"></div>
   </div>
 
-  <!-- Improvement #2: Player Profile & Statistics Modal -->
+  <!-- Player Profile & Statistics Modal -->
   <div class="modal-backdrop" id="playerModal">
     <div class="modal-box">
       <div class="modal-header">
@@ -1109,46 +1042,11 @@
     </div>
   </div>
 
-  <!-- Modal for Google Sheets Live Sync / CSV Import -->
-  <div class="modal-backdrop" id="syncModal">
-    <div class="modal-box">
-      <div class="modal-header">
-        <div class="modal-title">Conexão com Google Sheets (PRI_Teste)</div>
-        <button type="button" class="modal-close" id="btnCloseModal">&times;</button>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">ID ou Link da Planilha Google Sheets</label>
-        <input type="text" id="inputSheetId" class="form-input" value="1BjaihYOGkMi5TJyt8fOigRs7er7e0XbHoNbsaU48yy4" />
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Nome da Aba</label>
-        <input type="text" id="inputSheetName" class="form-input" value="Pontos_ate_semana" />
-        <div class="form-help">
-          Para leitura ao vivo direto pelo navegador, a planilha deve estar compartilhada como <strong>"Qualquer pessoa com o link pode ver"</strong>. Caso esteja privada ou offline, o site utiliza automaticamente os dados integrados de <code>PRI_Teste</code>.
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Ou importe um arquivo CSV exportado da aba <code>Pontos_ate_semana</code></label>
-        <input type="file" id="inputCsvFile" accept=".csv,.txt" class="form-input" />
-      </div>
-
-      <div id="syncFeedback" style="font-size: 12px; color: #5eead4; min-height: 18px;"></div>
-
-      <div class="modal-actions">
-        <button type="button" class="btn-tool" id="btnResetEmbedded">Restaurar Dados Originais</button>
-        <button type="button" class="btn-tool active" id="btnFetchLive">Sincronizar Agora</button>
-      </div>
-    </div>
-  </div>
-
   <script>
   (function() {
     // Self-healing deduplicator in case an editor ever concatenates two HTML copies
     function deduplicateDOM() {
-      const selectors = ['.top-toolbar', '.race-card', '.bora-summary', '#playerModal', '#videoReadyModal', '#syncModal', '#exportCanvas'];
+      const selectors = ['.top-toolbar', '.race-card', '.bora-summary', '#playerModal', '#videoReadyModal', '#exportCanvas'];
       selectors.forEach(sel => {
         const list = document.querySelectorAll(sel);
         for (let i = 1; i < list.length; i++) list[i].remove();
@@ -1161,8 +1059,6 @@
     window.addEventListener('load', deduplicateDOM);
 
     // Universal Mobile (iOS Safari + Android Chrome/Samsung) & Desktop Tap Handler
-    // Does not call preventDefault() on touchend so Android Chrome preserves full userActivation for downloads/sharing,
-    // while using a 450ms lock so synthesized click never double-fires after touchend.
     function bindTap(el, handler) {
       if (!el) return;
       let lastTouchTime = 0;
@@ -1181,9 +1077,7 @@
           const dx = Math.abs(e.changedTouches[0].clientX - startX);
           const dy = Math.abs(e.changedTouches[0].clientY - startY);
           if (dx < 14 && dy < 14) {
-            const now = Date.now();
-            if (now - lastTouchTime < 300) return;
-            lastTouchTime = now;
+            lastTouchTime = Date.now();
             handler(e);
           }
         }
@@ -1219,7 +1113,8 @@
     // State
     let isPlaying = true;
     let speedMultiplier = 1.0;
-    let spotlightBoraOnly = false;
+    // User request #2: Default is false (all bars red #d36566); clicking "Destacar Bora" toggles Bora bars to turquoise (#46b9ac)
+    let highlightBoraColor = false;
     let isWideMode = false; // False = 9:16 Mobile (default), True = Wide (820x776)
     let progressFloat = 0.0; // 0 to (dates.length - 1)
     let lastTimestamp = null;
@@ -1228,13 +1123,15 @@
     let lastRecordedFile = null;
     let lastRecordedUrl = null;
 
-    // Precomputed discrete weekly ranks (weekIndex -> Map(playerName -> 1..N))
+    // Precomputed discrete weekly ranks & weekly MVP strings
     let discreteWeeklyRanks = [];
+    let weeklyMvpByWeek = [];
 
     // DOM Elements
     const barsLayer = document.getElementById('barsLayer');
     const axisLayer = document.getElementById('axisLayer');
     const dateWatermark = document.getElementById('dateWatermark');
+    const mvpBanner = document.getElementById('mvpBanner');
     const summaryDateLabel = document.getElementById('summaryDateLabel');
     const scrubberProgress = document.getElementById('scrubberProgress');
     const scrubberHandle = document.getElementById('scrubberHandle');
@@ -1244,7 +1141,6 @@
     const iconPause = document.getElementById('iconPause');
     const iconPlay = document.getElementById('iconPlay');
     const boraChipsContainer = document.getElementById('boraChipsContainer');
-    const boraCountBadge = document.getElementById('boraCountBadge');
     const btnHighlightBora = document.getElementById('btnHighlightBora');
     const btnToggleFormat = document.getElementById('btnToggleFormat');
     const btnDownloadVideo = document.getElementById('btnDownloadVideo');
@@ -1304,8 +1200,15 @@
       return s;
     }
 
-    function computeDiscreteWeeklyRanks() {
+    function shortPlayerName(fullName) {
+      const parts = String(fullName).trim().split(/\s+/);
+      if (parts.length <= 1) return fullName;
+      return `${parts[0][0]}. ${parts[parts.length - 1]}`;
+    }
+
+    function computeDiscreteWeeklyRanksAndMvps() {
       discreteWeeklyRanks = [];
+      weeklyMvpByWeek = [];
       const nWeeks = appData.dates.length;
       for (let w = 0; w < nWeeks; w++) {
         const list = appData.players.map(p => ({
@@ -1321,6 +1224,40 @@
           rMap.set(item.name, item.score > 0 ? idx + 1 : null);
         });
         discreteWeeklyRanks.push(rMap);
+
+        // Compute MVP(s) with highest point gain in week w
+        let maxGain = 0;
+        let winners = [];
+        appData.players.forEach(p => {
+          const cur = p.scores[w] || 0;
+          const prev = w > 0 ? (p.scores[w - 1] || 0) : 0;
+          const gain = Math.round(cur - prev);
+          if (gain > maxGain) {
+            maxGain = gain;
+            winners = [p.name];
+          } else if (gain > 0 && gain === maxGain) {
+            winners.push(p.name);
+          }
+        });
+
+        if (maxGain > 0 && winners.length > 0) {
+          let mobileText = '';
+          let wideText = '';
+          if (winners.length === 1) {
+            mobileText = `🔥 MVP: ${winners[0]} (+${maxGain})`;
+            wideText = `🔥 MVP da Semana: ${winners[0]} (+${maxGain} pts)`;
+          } else if (winners.length === 2) {
+            mobileText = `🔥 MVP: ${shortPlayerName(winners[0])} & ${shortPlayerName(winners[1])} (+${maxGain})`;
+            wideText = `🔥 MVP da Semana: ${winners[0]} & ${winners[1]} (+${maxGain} pts)`;
+          } else {
+            const shortList = winners.slice(0, 3).map(shortPlayerName).join(', ');
+            mobileText = `🔥 MVP: ${shortList} (+${maxGain})`;
+            wideText = `🔥 MVP da Semana: ${winners.join(', ')} (+${maxGain} pts)`;
+          }
+          weeklyMvpByWeek.push({ mobileText, wideText, maxGain, winners });
+        } else {
+          weeklyMvpByWeek.push({ mobileText: '🔥 MVP: —', wideText: '🔥 MVP da Semana: —', maxGain: 0, winners: [] });
+        }
       }
     }
 
@@ -1331,10 +1268,9 @@
       boraChipElements.clear();
 
       appData.DatesNormalized = appData.dates.map(normalizeDateLabel);
-      computeDiscreteWeeklyRanks();
+      computeDiscreteWeeklyRanksAndMvps();
 
       const boraPlayers = appData.players.filter(p => p.isBora);
-      boraCountBadge.textContent = boraPlayers.length;
 
       // Create persistent DOM elements for each player bar
       appData.players.forEach((player) => {
@@ -1510,10 +1446,18 @@
       const frac = clampedT - idx0;
 
       const activeWeekIdx = frac > 0.55 ? idx1 : idx0;
-      const activeDateStr = appData.DatesNormalized[idx0] || '';
+      const dateIdx = (idx1 === numDates - 1 && frac >= 0.85) ? idx1 : idx0;
+      const activeDateStr = appData.DatesNormalized[dateIdx] || '';
       if (dateWatermark.textContent !== activeDateStr) {
         dateWatermark.textContent = activeDateStr;
         summaryDateLabel.textContent = `Semana: ${activeDateStr}`;
+      }
+
+      // Suggestion #2: Update Weekly MVP Badge
+      const mvpInfo = weeklyMvpByWeek[activeWeekIdx] || { mobileText: '🔥 MVP: —', wideText: '🔥 MVP: —' };
+      const targetMvpText = isWideMode ? mvpInfo.wideText : mvpInfo.mobileText;
+      if (mvpBanner.textContent !== targetMvpText) {
+        mvpBanner.textContent = targetMvpText;
       }
 
       const totalPct = numDates > 1 ? (clampedT / (numDates - 1)) * 100 : 100;
@@ -1614,12 +1558,6 @@
         dom.row.style.opacity = isVisible ? '1' : '0';
         dom.row.style.pointerEvents = isVisible ? 'auto' : 'none';
 
-        if (spotlightBoraOnly && !item.isBora) {
-          dom.row.classList.add('dimmed');
-        } else {
-          dom.row.classList.remove('dimmed');
-        }
-
         if (item.isBora) {
           const chipDom = boraChipElements.get(item.name);
           if (chipDom) {
@@ -1633,7 +1571,7 @@
       });
 
       if (isRecordingVideo) {
-        drawRaceCardToCanvas(clampedT, currentStandings, maxScore, activeDateStr, totalPct);
+        drawRaceCardToCanvas(clampedT, currentStandings, maxScore, activeDateStr, totalPct, targetMvpText);
       }
     }
 
@@ -1657,7 +1595,7 @@
 
       const badgesHtml = [];
       if (player.isBora) {
-        badgesHtml.push(`<span class="p-badge bora">★ Destaque Bora</span>`);
+        badgesHtml.push(`<span class="p-badge bora">★ Time Bora</span>`);
       }
       if (player.team && player.team.toLowerCase() !== 'bora') {
         badgesHtml.push(`<span class="p-badge team">Time: ${player.team}</span>`);
@@ -1709,7 +1647,7 @@
         const gain = cur - prev;
         const rAtWeek = discreteWeeklyRanks[idx] ? discreteWeeklyRanks[idx].get(player.name) : null;
         const pctBar = Math.min(100, Math.round((cur / maxPlayerScore) * 100));
-        const barColor = player.isBora ? '#46b9ac' : '#d36566';
+        const barColor = (highlightBoraColor && player.isBora) ? '#46b9ac' : '#d36566';
 
         return `
           <div class="history-row">
@@ -1754,8 +1692,8 @@
       renderFrame(progressFloat, true);
     });
 
-    // 2D Canvas renderer for video export
-    function drawRaceCardToCanvas(clampedT, currentStandings, maxScore, activeDateStr, totalPct) {
+    // 2D Canvas renderer for video export (reflects highlightBoraColor & MVP badge!)
+    function drawRaceCardToCanvas(clampedT, currentStandings, maxScore, activeDateStr, totalPct, mvpText) {
       const ctx = exportCanvas.getContext('2d');
       const W = isWideMode ? 820 : 460;
       const H = isWideMode ? 776 : 818;
@@ -1772,6 +1710,7 @@
       ctx.lineWidth = 2;
       ctx.strokeRect(1, 1, W - 2, H - 2);
 
+      // Header divider
       ctx.strokeStyle = '#dcdcdc';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
@@ -1779,11 +1718,46 @@
       ctx.lineTo(W, 46);
       ctx.stroke();
 
+      // Header Title
       ctx.fillStyle = '#ffffff';
       ctx.font = `700 18px ${monoFont}`;
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
       ctx.fillText('Rank Modern', 14, 23);
+
+      // Suggestion #2: Draw Weekly MVP pill in Header
+      if (mvpText) {
+        ctx.save();
+        const mvpFontSz = isWideMode ? 12 : 10.5;
+        ctx.font = `700 ${mvpFontSz}px ${monoFont}`;
+        const textW = ctx.measureText(mvpText).width;
+        const padX = 8;
+        const pillW = Math.min(isWideMode ? 580 : 295, textW + padX * 2);
+        const pillH = 22;
+        const pillX = W - 12 - pillW;
+        const pillY = 23 - pillH / 2;
+
+        ctx.fillStyle = 'rgba(251, 191, 36, 0.13)';
+        ctx.strokeStyle = 'rgba(251, 191, 36, 0.45)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        if (ctx.roundRect) {
+          ctx.roundRect(pillX, pillY, pillW, pillH, 11);
+        } else {
+          ctx.rect(pillX, pillY, pillW, pillH);
+        }
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.rect(pillX + 4, pillY, pillW - 8, pillH);
+        ctx.clip();
+        ctx.fillStyle = '#fde047';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(mvpText, W - 12 - padX, 23.5);
+        ctx.restore();
+      }
 
       const stageTop = 46;
       const footerH = 60;
@@ -1810,13 +1784,7 @@
         const barW = Math.max(2, (widthPct / 100) * trackW);
 
         ctx.save();
-        if (!isVisible) {
-          ctx.globalAlpha = 0;
-        } else if (spotlightBoraOnly && !item.isBora) {
-          ctx.globalAlpha = 0.22;
-        } else {
-          ctx.globalAlpha = 1.0;
-        }
+        ctx.globalAlpha = isVisible ? 1.0 : 0.0;
 
         ctx.fillStyle = rankNum <= 8 ? '#facc15' : '#9ca3af';
         ctx.font = `700 ${isWideMode ? 13 : 12}px ${monoFont}`;
@@ -1824,7 +1792,8 @@
         ctx.textBaseline = 'middle';
         ctx.fillText(`${rankNum}º`, xLeft - 5, y + BAR_HEIGHT / 2 + 0.5);
 
-        ctx.fillStyle = item.isBora ? '#46b9ac' : '#d36566';
+        // User request #2: Only color Bora bars turquoise (#46b9ac) when highlightBoraColor is true; otherwise all bars are red (#d36566)
+        ctx.fillStyle = (highlightBoraColor && item.isBora) ? '#46b9ac' : '#d36566';
         ctx.fillRect(xLeft, y, barW, BAR_HEIGHT);
 
         ctx.save();
@@ -1966,6 +1935,10 @@
         });
       }
 
+      // Imperceptible 1x1 pixel pulse so hardware encoders & GIF/loop players never drop the 5s static hold frames
+      ctx.fillStyle = (Math.floor(performance.now() / 33) % 2 === 0) ? '#25262b' : '#26272c';
+      ctx.fillRect(W - 2, H - 2, 1, 1);
+
       ctx.restore();
     }
 
@@ -2005,6 +1978,7 @@
       const config = getSupportedVideoConfig();
       const chunks = [];
       isRecordingVideo = true;
+      window.__finalHoldActive = false;
 
       progressFloat = 0;
       isPlaying = false;
@@ -2038,6 +2012,7 @@
 
       activeMediaRecorder.onstop = () => {
         isRecordingVideo = false;
+        window.__finalHoldActive = false;
         activeMediaRecorder = null;
         btnDownloadVideo.classList.remove('recording');
         btnDownloadVideo.textContent = '⬇ Baixar Vídeo';
@@ -2048,7 +2023,8 @@
         lastRecordedUrl = URL.createObjectURL(blob);
 
         const suffix = isWideMode ? 'wide' : 'mobile';
-        const fileName = `rank_modern_race_${suffix}.${config.ext}`;
+        const boraTag = highlightBoraColor ? '_bora' : '';
+        const fileName = `rank_modern_race_${suffix}${boraTag}.${config.ext}`;
 
         try {
           lastRecordedFile = new File([blob], fileName, { type: blobType });
@@ -2071,7 +2047,6 @@
           a.click();
           document.body.removeChild(a);
         }
-        // Always show the ready modal on mobile (Android & iPhone) so the user can 1-tap Share to WhatsApp or Download
         videoReadyModal.classList.add('open');
       };
 
@@ -2138,13 +2113,26 @@
           isPlaying = false;
           updatePlayPauseIcons();
 
-          if (isRecordingVideo && activeMediaRecorder) {
-            btnDownloadVideo.textContent = '⏳ Finalizando vídeo...';
+          if (isRecordingVideo && activeMediaRecorder && !window.__finalHoldActive) {
+            window.__finalHoldActive = true;
+            const FINAL_HOLD_SECONDS = 5;
+            let remainingSec = FINAL_HOLD_SECONDS;
+            btnDownloadVideo.textContent = `⏳ Tela final (${remainingSec}s)...`;
+            const countdownInterval = setInterval(() => {
+              remainingSec -= 1;
+              if (!isRecordingVideo || remainingSec <= 0) {
+                clearInterval(countdownInterval);
+              } else {
+                btnDownloadVideo.textContent = `⏳ Tela final (${remainingSec}s)...`;
+              }
+            }, 1000);
             setTimeout(() => {
+              clearInterval(countdownInterval);
+              window.__finalHoldActive = false;
               if (activeMediaRecorder && activeMediaRecorder.state !== 'inactive') {
                 try { activeMediaRecorder.stop(); } catch (e) {}
               }
-            }, 1200);
+            }, FINAL_HOLD_SECONDS * 1000);
           }
         }
       } else if (isRecordingVideo) {
@@ -2209,10 +2197,11 @@
       isDraggingScrubber = false;
     });
 
-    // Highlight Bora toggle
+    // User request #2: "Destacar Bora" toggles Bora bar color between default red (#d36566) and turquoise (#46b9ac)
     bindTap(btnHighlightBora, () => {
-      spotlightBoraOnly = !spotlightBoraOnly;
-      btnHighlightBora.classList.toggle('active', spotlightBoraOnly);
+      highlightBoraColor = !highlightBoraColor;
+      btnHighlightBora.classList.toggle('active', highlightBoraColor);
+      document.body.classList.toggle('highlight-bora', highlightBoraColor);
       renderFrame(progressFloat, true);
     });
 
@@ -2221,28 +2210,7 @@
       speedMultiplier = parseFloat(e.target.value) || 1.0;
     });
 
-    // Modal & Live Google Sheets / CSV Reader
-    const syncModal = document.getElementById('syncModal');
-    const btnOpenSync = document.getElementById('btnOpenSync');
-    const btnCloseModal = document.getElementById('btnCloseModal');
-    const btnFetchLive = document.getElementById('btnFetchLive');
-    const btnResetEmbedded = document.getElementById('btnResetEmbedded');
-    const inputSheetId = document.getElementById('inputSheetId');
-    const inputSheetName = document.getElementById('inputSheetName');
-    const inputCsvFile = document.getElementById('inputCsvFile');
-    const syncFeedback = document.getElementById('syncFeedback');
-
-    bindTap(btnOpenSync, () => syncModal.classList.add('open'));
-    bindTap(btnCloseModal, () => syncModal.classList.remove('open'));
-    syncModal.addEventListener('click', (e) => {
-      if (e.target === syncModal) syncModal.classList.remove('open');
-    });
-
-    function extractSheetId(raw) {
-      const match = String(raw).match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-      return match ? match[1] : String(raw).trim();
-    }
-
+    // Automatic background live Google Sheets sync (keeps data updated from PRI_Teste without needing a button)
     function fetchFromGoogleSheetsJSONP(sheetId, sheetName) {
       return new Promise((resolve, reject) => {
         const callbackName = 'gvizCallback_' + Math.random().toString(36).substring(2, 9);
@@ -2382,125 +2350,11 @@
       });
     }
 
-    function parseCSVContent(csvText) {
-      const lines = csvText.split(/\r?\n/).filter(l => l.trim().length > 0);
-      if (lines.length < 2) throw new Error('CSV vazio ou inválido.');
-
-      const parseRow = (line) => {
-        const res = [];
-        let cur = '';
-        let inQuotes = false;
-        for (let i = 0; i < line.length; i++) {
-          const ch = line[i];
-          if (ch === '"') {
-            inQuotes = !inQuotes;
-          } else if (ch === ',' && !inQuotes) {
-            res.push(cur.trim());
-            cur = '';
-          } else {
-            cur += ch;
-          }
-        }
-        res.push(cur.trim());
-        return res;
-      };
-
-      const header = parseRow(lines[0]);
-      const dates = [];
-      const colIndices = [];
-      for (let c = 2; c < header.length; c++) {
-        if (header[c]) {
-          dates.push(normalizeDateLabel(header[c]));
-          colIndices.push(c);
-        }
-      }
-
-      const players = [];
-      for (let r = 1; r < lines.length; r++) {
-        const row = parseRow(lines[r]);
-        const name = row[0] || '';
-        if (!name) continue;
-        const tag = row[1] || '';
-        const isBora = tag.toLowerCase() === 'bora' || KNOWN_BORA_PLAYERS.has(name.toLowerCase());
-        const scores = colIndices.map(c => {
-          const v = parseFloat((row[c] || '0').replace(',', '.'));
-          return isNaN(v) ? 0 : v;
-        });
-        const fallbackMeta = embeddedMetaByPlayer.get(name.toLowerCase()) || {};
-        players.push({
-          name,
-          tag: isBora ? 'Bora' : tag,
-          isBora,
-          team: fallbackMeta.team || (isBora ? 'Bora' : ''),
-          scores,
-          stats: fallbackMeta.stats || { points: scores[scores.length - 1] || 0, wins: 0, draws: 0, losses: 0, matches: 0, tournaments: 0, winrate: 0 }
-        });
-      }
-      return { dates, players };
-    }
-
-    bindTap(btnFetchLive, async () => {
-      const sheetId = extractSheetId(inputSheetId.value);
-      const sheetName = inputSheetName.value.trim() || 'Pontos_ate_semana';
-      syncFeedback.style.color = '#9ca3af';
-      syncFeedback.textContent = 'Consultando planilha no Google Sheets...';
-
-      try {
-        const table = await fetchFromGoogleSheetsJSONP(sheetId, sheetName);
-        const parsed = parseGvizTable(table);
-        appData.dates = parsed.dates;
-        appData.players = parsed.players;
-        fetchFromGoogleSheetsJSONP(sheetId, 'RANKING_MODERN').then(mergeLiveRankingModernStats).catch(() => {});
-        progressFloat = 0;
-        isPlaying = true;
-        updatePlayPauseIcons();
-        initChartDOM();
-        syncFeedback.style.color = '#5eead4';
-        syncFeedback.textContent = `Sucesso! ${parsed.players.length} jogadores e ${parsed.dates.length} semanas carregadas ao vivo.`;
-      } catch (err) {
-        syncFeedback.style.color = '#fbbf24';
-        syncFeedback.textContent = `Aviso: A planilha está com acesso restrito ou offline. Usando os dados integrados de PRI_Teste (${appData.players.length} jogadores, ${appData.dates.length} semanas).`;
-      }
-    });
-
-    inputCsvFile.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        try {
-          const parsed = parseCSVContent(ev.target.result);
-          appData.dates = parsed.dates;
-          appData.players = parsed.players;
-          progressFloat = 0;
-          isPlaying = true;
-          updatePlayPauseIcons();
-          initChartDOM();
-          syncFeedback.style.color = '#5eead4';
-          syncFeedback.textContent = `Arquivo CSV importado com ${parsed.players.length} jogadores e ${parsed.dates.length} semanas!`;
-        } catch (err) {
-          syncFeedback.style.color = '#f87171';
-          syncFeedback.textContent = 'Erro ao ler o CSV: ' + err.message;
-        }
-      };
-      reader.readAsText(file);
-    });
-
-    bindTap(btnResetEmbedded, () => {
-      appData = JSON.parse(JSON.stringify(EMBEDDED_DATA));
-      progressFloat = 0;
-      isPlaying = true;
-      updatePlayPauseIcons();
-      initChartDOM();
-      syncFeedback.style.color = '#5eead4';
-      syncFeedback.textContent = 'Dados originais da planilha PRI_Teste restaurados.';
-    });
-
     // Initialize and start animation
     initChartDOM();
     requestAnimationFrame(animationLoop);
 
-    // Attempt silent live update on load if online and sheet is shared
+    // Silent live update on load if online and sheet is shared
     fetchFromGoogleSheetsJSONP(appData.spreadsheetId, appData.sheetName)
       .then(table => {
         const parsed = parseGvizTable(table);
