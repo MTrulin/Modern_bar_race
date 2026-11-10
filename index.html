@@ -1226,6 +1226,7 @@
     let isWideMode = false; // False = 9:16 Mobile (default), True = Wide (820x776)
     let progressFloat = 0.0; // 0 to (appData.dates.length - 1)
     let lastTimestamp = null;
+    let isSettlingRanks = false;
     let isRecordingVideo = false;
     let activeMediaRecorder = null;
     let lastRecordedFile = null;
@@ -1784,7 +1785,8 @@
       const currentStandings = appData.players.map((p, originalIdx) => {
         const s0 = p.scores[idx0] || 0;
         const s1 = p.scores[idx1] !== undefined ? p.scores[idx1] : s0;
-        const interpScore = s0 + (s1 - s0) * frac;
+        const scoreFrac = Math.min(1.0, frac / 0.82);
+        const interpScore = s0 + (s1 - s0) * scoreFrac;
 
         const prevWeekScore = activeWeekIdx > 0 ? (p.scores[activeWeekIdx - 1] || 0) : 0;
         const curWeekScore = p.scores[activeWeekIdx] || 0;
@@ -1824,6 +1826,7 @@
       updateAxisGrid(maxScore);
 
       const trackWidth = barsLayer.clientWidth || (isWideMode ? 680 : 346);
+      let hasUnsettledBars = false;
 
       currentStandings.forEach((item, rankIndex) => {
         const dom = barElements.get(item.name);
@@ -1839,7 +1842,13 @@
           dom.currentVisualRank = targetRank;
           dom.initialized = true;
         } else {
-          dom.currentVisualRank += (targetRank - dom.currentVisualRank) * 0.22;
+          const rankDiff = targetRank - dom.currentVisualRank;
+          if (Math.abs(rankDiff) <= 0.003) {
+            dom.currentVisualRank = targetRank;
+          } else {
+            dom.currentVisualRank += rankDiff * 0.25;
+            hasUnsettledBars = true;
+          }
         }
 
         const yPx = dom.currentVisualRank * ROW_STRIDE;
@@ -1893,6 +1902,8 @@
           }
         }
       });
+
+      isSettlingRanks = hasUnsettledBars;
 
       if (isRecordingVideo) {
         drawRaceCardToCanvas(clampedT, currentStandings, maxScore, activeDateStr, totalPct, targetMvpText, idx0);
@@ -2489,7 +2500,7 @@
         needsRender = true;
       }
 
-      if (needsRender) {
+      if (needsRender || isSettlingRanks) {
         renderFrame(progressFloat, false);
       }
       requestAnimationFrame(animationLoop);
