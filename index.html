@@ -1461,12 +1461,13 @@
           return;
         }
         const firstWeekIdx = mObj.weekIndices[0];
-        const monthDates = ['Início (0p)', ...mObj.weekIndices.map(idx => parsedMasterDates[idx].label)];
+        const realMonthDates = mObj.weekIndices.map(idx => parsedMasterDates[idx].label);
+        const isSingleWeekMonth = realMonthDates.length === 1;
+        const monthDates = isSingleWeekMonth ? [realMonthDates[0], realMonthDates[0]] : [...realMonthDates];
 
         const monthPlayers = masterData.players.map(p => {
           const baseBeforeMonth = firstWeekIdx > 0 ? (p.scores[firstWeekIdx - 1] || 0) : 0;
-          // Frame 0 starts everyone at 0 points; subsequent frames add the cumulative points earned within the chosen month
-          const monthScores = [0];
+          const monthScores = isSingleWeekMonth ? [0] : [];
           mObj.weekIndices.forEach(wIdx => {
             const rawCum = p.scores[wIdx] || 0;
             const gainedInMonth = Math.max(0, Math.round((rawCum - baseBeforeMonth) * 100) / 100);
@@ -1481,9 +1482,11 @@
         appData = {
           ...masterData,
           isMonthlyMode: true,
+          isSingleWeekMonth,
           activeMonthObj: mObj,
           dates: monthDates,
           DatesNormalized: monthDates,
+          ScrubberDates: realMonthDates,
           players: monthPlayers
         };
 
@@ -1563,8 +1566,7 @@
         }
       }
 
-      // In Monthly mode, frame 0 is "Início (0p)" so copy Week 1's MVP preview onto frame 0 so the header badge is never blank
-      if (appData.isMonthlyMode && weeklyMvpByWeek.length > 1) {
+      if (appData.isSingleWeekMonth && weeklyMvpByWeek.length > 1) {
         weeklyMvpByWeek[0] = weeklyMvpByWeek[1];
       }
     }
@@ -1679,14 +1681,26 @@
 
     function buildScrubberTicks() {
       scrubberTicks.innerHTML = '';
-      const n = appData.DatesNormalized.length;
-      if (n <= 1) return;
+      const tickLabels = (appData.isMonthlyMode && appData.ScrubberDates && appData.ScrubberDates.length > 0)
+        ? appData.ScrubberDates
+        : appData.DatesNormalized;
+      const n = tickLabels.length;
+      if (n === 0) return;
+
+      if (n === 1) {
+        const tick = document.createElement('div');
+        tick.className = 'scrubber-tick major';
+        tick.style.left = '0%';
+        tick.innerHTML = `<div class="scrubber-tick-mark"></div><div class="scrubber-tick-label">${tickLabels[0]}</div>`;
+        scrubberTicks.appendChild(tick);
+        return;
+      }
 
       const labelStep = isWideMode
         ? (n <= 9 ? 1 : (n <= 19 ? 2 : 3))
         : (n <= 6 ? 1 : (n <= 11 ? 2 : (n <= 20 ? 3 : 4)));
 
-      appData.DatesNormalized.forEach((dLabel, idx) => {
+      tickLabels.forEach((dLabel, idx) => {
         const pct = (idx / (n - 1)) * 100;
         const tick = document.createElement('div');
         const isLast = (idx === n - 1);
@@ -1702,7 +1716,7 @@
         if (isMajor) {
           const lbl = document.createElement('div');
           lbl.className = 'scrubber-tick-label';
-          lbl.textContent = (appData.isMonthlyMode && idx === 0) ? '0 pts' : dLabel;
+          lbl.textContent = dLabel;
           tick.appendChild(lbl);
         }
 
@@ -1755,10 +1769,9 @@
       const idx1 = Math.min(numDates - 1, idx0 + 1);
       const frac = clampedT - idx0;
 
-      // In Monthly mode, frame 0 is "Início (0p)". As soon as animation leaves 0 (frac > 0.12), show Week 1's date & gains!
       let activeWeekIdx = frac > 0.55 ? idx1 : idx0;
       let dateIdx = (idx1 === numDates - 1 && frac >= 0.85) ? idx1 : idx0;
-      if (appData.isMonthlyMode && idx0 === 0 && frac > 0.12) {
+      if (appData.isSingleWeekMonth) {
         activeWeekIdx = 1;
         dateIdx = 1;
       }
@@ -1816,7 +1829,7 @@
       currentStandings.sort((a, b) => {
         if (Math.abs(b.score - a.score) > 0.0001) return b.score - a.score;
         // At t = 0 in Monthly mode (everyone at 0 pts), sort ties by Week 1 target score so players line up smoothly
-        if (appData.isMonthlyMode && idx0 === 0 && Math.abs(b.nextScore - a.nextScore) > 0.0001) {
+        if (appData.isSingleWeekMonth && idx0 === 0 && Math.abs(b.nextScore - a.nextScore) > 0.0001) {
           return b.nextScore - a.nextScore;
         }
         // If tied at the end of a week, keep the player who was already ahead entering the week on top (avoids sudden alphabetical jump at 100%)
@@ -1837,8 +1850,7 @@
         if (!dom) return;
 
         const rankNum = rankIndex + 1;
-        // In Monthly mode at t=0 ("Início (0p)"), show the Week 1 scorers lined up at 0 points ready to race
-        const isStartingLineMonthly = (appData.isMonthlyMode && idx0 === 0 && item.nextScore > 0);
+        const isStartingLineMonthly = (appData.isSingleWeekMonth && idx0 === 0 && item.nextScore > 0);
         const isVisible = rankIndex < TOP_N && (item.score > 0 || isStartingLineMonthly);
         const targetRank = isVisible ? rankIndex : TOP_N + 1.5;
 
@@ -1933,14 +1945,6 @@
       pmName.textContent = player.name;
 
       const badgesHtml = [];
-      if (player.isBora) {
-        badgesHtml.push(`<span class="p-badge bora">★ Time Bora</span>`);
-      }
-      if (player.team && player.team.toLowerCase() !== 'bora') {
-        badgesHtml.push(`<span class="p-badge team">Time: ${player.team}</span>`);
-      } else if (player.team && player.team.toLowerCase() === 'bora' && !player.isBora) {
-        badgesHtml.push(`<span class="p-badge bora">Time: Bora</span>`);
-      }
       if (finalRank <= 8) {
         badgesHtml.push(`<span class="p-badge top8">🏆 No Corte Top 8 (#${finalRank})</span>`);
       } else {
@@ -1990,6 +1994,7 @@
 
       const maxPlayerScore = Math.max(1, finalScore);
       const historyRowsHtml = appData.DatesNormalized.map((dLabel, idx) => {
+        if (appData.isSingleWeekMonth && idx === 0) return '';
         const cur = Math.round(player.scores[idx] || 0);
         const prev = idx > 0 ? Math.round(player.scores[idx - 1] || 0) : 0;
         const gain = cur - prev;
@@ -2138,7 +2143,7 @@
         const dom = barElements.get(item.name);
         if (!dom) return;
         const rankNum = rankIndex + 1;
-        const isStartingLineMonthly = (appData.isMonthlyMode && idx0 === 0 && item.nextScore > 0);
+        const isStartingLineMonthly = (appData.isSingleWeekMonth && idx0 === 0 && item.nextScore > 0);
         const isVisible = rankIndex < TOP_N && (item.score > 0 || isStartingLineMonthly);
         if (!isVisible && dom.currentVisualRank > TOP_N + 0.8) return;
 
@@ -2274,12 +2279,23 @@
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(handleX - 2, scrubY - 7, 4, 16);
 
-      const n = appData.DatesNormalized.length;
-      if (n > 1) {
+      const tickLabels = (appData.isMonthlyMode && appData.ScrubberDates && appData.ScrubberDates.length > 0)
+        ? appData.ScrubberDates
+        : appData.DatesNormalized;
+      const n = tickLabels.length;
+      if (n === 1) {
+        ctx.fillStyle = '#cfd2d6';
+        ctx.fillRect(scrubLeft - 0.5, scrubY + 4, 1, 7);
+        ctx.fillStyle = '#d1d5db';
+        ctx.font = `600 9.5px ${monoFont}`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText(tickLabels[0], scrubLeft, scrubY + 13);
+      } else if (n > 1) {
         const labelStep = isWideMode
           ? (n <= 9 ? 1 : (n <= 19 ? 2 : 3))
           : (n <= 6 ? 1 : (n <= 11 ? 2 : (n <= 20 ? 3 : 4)));
-        appData.DatesNormalized.forEach((dLabel, idx) => {
+        tickLabels.forEach((dLabel, idx) => {
           const tx = scrubLeft + (idx / (n - 1)) * scrubW;
           const isLast = (idx === n - 1);
           const isSpacedStep = (idx % labelStep === 0) && ((n - 1 - idx) >= Math.ceil(labelStep / 2));
@@ -2293,8 +2309,7 @@
             ctx.font = `600 9.5px ${monoFont}`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'top';
-            const tickText = (appData.isMonthlyMode && idx === 0) ? '0 pts' : dLabel;
-            ctx.fillText(tickText, tx, scrubY + 13);
+            ctx.fillText(dLabel, tx, scrubY + 13);
           }
         });
       }
