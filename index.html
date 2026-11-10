@@ -1785,8 +1785,7 @@
       const currentStandings = appData.players.map((p, originalIdx) => {
         const s0 = p.scores[idx0] || 0;
         const s1 = p.scores[idx1] !== undefined ? p.scores[idx1] : s0;
-        const scoreFrac = Math.min(1.0, frac / 0.82);
-        const interpScore = s0 + (s1 - s0) * scoreFrac;
+        const interpScore = s0 + (s1 - s0) * frac;
 
         const prevWeekScore = activeWeekIdx > 0 ? (p.scores[activeWeekIdx - 1] || 0) : 0;
         const curWeekScore = p.scores[activeWeekIdx] || 0;
@@ -1805,6 +1804,7 @@
           name: p.name,
           isBora: p.isBora,
           score: interpScore,
+          prevScore: s0,
           nextScore: s1,
           displayScore: Math.round(interpScore),
           weeklyGain,
@@ -1818,6 +1818,10 @@
         // At t = 0 in Monthly mode (everyone at 0 pts), sort ties by Week 1 target score so players line up smoothly
         if (appData.isMonthlyMode && idx0 === 0 && Math.abs(b.nextScore - a.nextScore) > 0.0001) {
           return b.nextScore - a.nextScore;
+        }
+        // If tied at the end of a week, keep the player who was already ahead entering the week on top (avoids sudden alphabetical jump at 100%)
+        if (Math.abs(b.prevScore - a.prevScore) > 0.0001) {
+          return b.prevScore - a.prevScore;
         }
         return compareNames(a.name, b.name);
       });
