@@ -144,6 +144,23 @@
       color: #fca5a5;
     }
 
+    /* Latest Tournament Date Indicator next to Baixar Vídeo */
+    .latest-date-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 8px;
+      min-height: 32px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid #3c404b;
+      border-radius: 6px;
+      color: #d1d5db;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
     /* Dynamic Monthly Rank Dropdown Menu */
     .month-dropdown-wrap {
       position: relative;
@@ -290,7 +307,7 @@
       font-size: 18px;
     }
 
-    /* Suggestion #2: Dynamic Weekly MVP Badge in Header */
+    /* Dynamic Weekly MVP Badge in Header */
     .mvp-badge {
       display: inline-flex;
       align-items: center;
@@ -432,12 +449,10 @@
       overflow: hidden;
       border-radius: 0 2px 2px 0;
       pointer-events: none;
-      /* Default: ALL bars are red (#d36566) until "Destacar Bora" is clicked */
       background-color: var(--bar-other);
       transition: background-color 0.2s ease;
     }
 
-    /* When "Destacar Bora" is active on body, Bora bars turn turquoise (#46b9ac) */
     body.highlight-bora .bar-row.is-bora .bar-fill {
       background-color: var(--bar-bora);
     }
@@ -984,7 +999,7 @@
 
       <!-- Dynamic Monthly Rank Selector Button & Menu right next to Modo Largo -->
       <div class="month-dropdown-wrap" id="monthDropdownWrap">
-        <button type="button" class="btn-tool" id="btnMonthlyRank" title="Escolher um mês para ver o Bar Race mensal começando do 0">
+        <button type="button" class="btn-tool" id="btnMonthlyRank" title="Escolher um mês para ver o Bar Race mensal">
           📅 Rank Mensal ▾
         </button>
         <div class="month-dropdown-menu" id="monthlyDropdownMenu"></div>
@@ -1004,6 +1019,9 @@
       <button type="button" class="btn-tool btn-video" id="btnDownloadVideo" title="Gravar e baixar o vídeo completo da animação">
         ⬇ Baixar Vídeo
       </button>
+      <span class="latest-date-badge" id="latestTournamentBadge" title="Última data de torneio registrada na planilha">
+        🗓️ Últ. torneio: 5/11/26
+      </span>
     </div>
   </div>
 
@@ -1014,25 +1032,17 @@
   <div class="race-card" id="raceCard">
     <div class="card-header">
       <div class="card-title" id="cardTitle">Rank Modern</div>
-      <!-- Suggestion #2: Dynamic Weekly MVP Badge -->
       <div class="mvp-badge" id="mvpBanner" title="Maior pontuador da semana atual">
         🔥 MVP: —
       </div>
     </div>
 
     <div class="chart-stage" id="chartStage">
-      <!-- Dynamic X-Axis Gridlines -->
       <div class="axis-layer" id="axisLayer"></div>
-
-      <!-- Top 8 Cutoff Dashed Line -->
       <div class="cutoff-line">
         <span class="cutoff-badge">— CORTE TOP 8 —</span>
       </div>
-
-      <!-- Animated Horizontal Bars -->
       <div class="bars-layer" id="barsLayer"></div>
-
-      <!-- Current Week Date Watermark -->
       <div class="date-watermark" id="dateWatermark">2/7/26</div>
     </div>
 
@@ -1202,15 +1212,13 @@
     };
 
     // Complete dataset extracted from PRI_Teste (Pontos_ate_semana + RANKING_MODERN + BASE)
-    const EMBEDDED_DATA = {"spreadsheetId": "1BjaihYOGkMi5TJyt8fOigRs7er7e0XbHoNbsaU48yy4", "sheetName": "Pontos_ate_semana", "rankingSheetName": "RANKING_MODERN", "spreadsheetTitle": "PRI_Teste", "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1BjaihYOGkMi5TJyt8fOigRs7er7e0XbHoNbsaU48yy4/edit", "dates": ["2/7/26", "9/7/26", "16/7/26", "23/7/26", "30/7/26", "6/8/26", "13/8/26", "20/8/26", "27/8/26", "3/9/26", "10/9/26", "17/9/26", "24/9/26", "1/10/26", "8/10/26", "15/10/26", "22/10/26", "29/10/26", "5/11/26"], "players": [{"name": "Eduardo Caruso", "tag": "Bora", "isBora": true, "team": "Bora", "scores": [13.0, 24.0, 31.0, 39.0, 44.0, 55.0, 68.0, 68.0, 78.0, 91.0, 104.0, 129.0, 139.0, 146.0, 156.0, 166.0, 177.0, 190.0, 190.0], "stats": {"points": 190.0, "wins": 52, "draws": 6, "losses": 21, "matches": 79, "tournaments": 17, "winrate": 65.82}}, {"name": "Edgar Bruno", "tag": "Bora", "isBora": true, "team": "Bora", "scores": [0.0, 7.0, 18.0, 25.0, 33.0, 41.0, 51.0, 58.0, 58.0, 65.0, 75.0, 94.0, 95.0, 99.0, 106.0, 119.0, 126.0, 136.0, 150.0], "stats": {"points": 150.0, "wins": 40, "draws": 4, "losses": 34, "matches": 78, "tournaments": 17, "winrate": 51.28}}, {"name": "Arthur Matos", "tag": "", "isBora": false, "team": "", "scores": [10.0, 20.0, 20.0, 20.0, 30.0, 40.0, 50.0, 50.0, 61.0, 74.0, 75.0, 102.0, 102.0, 102.0, 113.0, 117.0, 127.0, 140.0, 150.0], "stats": {"points": 150.0, "wins": 40, "draws": 3, "losses": 22, "matches": 65, "tournaments": 14, "winrate": 61.54}}, {"name": "Victor Marques", "tag": "Bora", "isBora": true, "team": "Buera", "scores": [10.0, 21.0, 21.0, 21.0, 31.0, 31.0, 38.0, 38.0, 45.0, 59.0, 70.0, 83.0, 87.0, 98.0, 111.0, 111.0, 124.0, 135.0, 148.0], "stats": {"points": 148.0, "wins": 41, "draws": 5, "losses": 21, "matches": 67, "tournaments": 14, "winrate": 61.19}}, {"name": "Gamaliel Cardoso", "tag": "", "isBora": false, "team": "", "scores": [8.0, 15.0, 25.0, 29.0, 30.0, 35.0, 48.0, 52.0, 59.0, 63.0, 70.0, 79.0, 87.0, 97.0, 107.0, 117.0, 124.0, 129.0, 140.0], "stats": {"points": 140.0, "wins": 37, "draws": 6, "losses": 43, "matches": 86, "tournaments": 19, "winrate": 43.02}}, {"name": "Deric Sousa", "tag": "", "isBora": false, "team": "", "scores": [0.0, 10.0, 10.0, 21.0, 25.0, 29.0, 42.0, 49.0, 59.0, 70.0, 83.0, 96.0, 97.0, 107.0, 117.0, 117.0, 121.0, 131.0, 138.0], "stats": {"points": 138.0, "wins": 38, "draws": 2, "losses": 30, "matches": 70, "tournaments": 16, "winrate": 54.29}}, {"name": "Welber Alves", "tag": "", "isBora": false, "team": "", "scores": [10.0, 20.0, 27.0, 27.0, 27.0, 27.0, 27.0, 37.0, 47.0, 57.0, 61.0, 80.0, 80.0, 90.0, 97.0, 110.0, 117.0, 124.0, 131.0], "stats": {"points": 131.0, "wins": 36, "draws": 0, "losses": 31, "matches": 67, "tournaments": 14, "winrate": 53.73}}, {"name": "Giovanni Santin", "tag": "", "isBora": false, "team": "Fofoletes", "scores": [8.0, 21.0, 21.0, 28.0, 28.0, 28.0, 35.0, 39.0, 52.0, 52.0, 52.0, 71.0, 82.0, 86.0, 96.0, 109.0, 116.0, 129.0, 129.0], "stats": {"points": 129.0, "wins": 35, "draws": 2, "losses": 24, "matches": 61, "tournaments": 13, "winrate": 57.38}}, {"name": "Aimbere Mendonça", "tag": "", "isBora": false, "team": "", "scores": [4.0, 11.0, 15.0, 25.0, 32.0, 36.0, 43.0, 47.0, 54.0, 67.0, 74.0, 95.0, 102.0, 106.0, 107.0, 118.0, 118.0, 118.0, 125.0], "stats": {"points": 125.0, "wins": 32, "draws": 2, "losses": 40, "matches": 74, "tournaments": 17, "winrate": 43.24}}, {"name": "Joao Flecha", "tag": "", "isBora": false, "team": "", "scores": [7.0, 14.0, 18.0, 22.0, 22.0, 22.0, 29.0, 40.0, 47.0, 54.0, 64.0, 83.0, 93.0, 93.0, 93.0, 100.0, 113.0, 123.0, 123.0], "stats": {"points": 123.0, "wins": 33, "draws": 1, "losses": 32, "matches": 66, "tournaments": 14, "winrate": 50.0}}, {"name": "Samuel Gomes", "tag": "Bora", "isBora": true, "team": "Bora", "scores": [13.0, 13.0, 24.0, 28.0, 39.0, 39.0, 49.0, 49.0, 50.0, 50.0, 50.0, 63.0, 63.0, 73.0, 87.0, 88.0, 98.0, 108.0, 118.0], "stats": {"points": 118.0, "wins": 32, "draws": 3, "losses": 22, "matches": 57, "tournaments": 13, "winrate": 56.14}}, {"name": "Ricardo Castro", "tag": "", "isBora": false, "team": "", "scores": [7.0, 14.0, 14.0, 14.0, 21.0, 28.0, 35.0, 42.0, 46.0, 56.0, 61.0, 74.0, 74.0, 78.0, 85.0, 85.0, 95.0, 102.0, 112.0], "stats": {"points": 112.0, "wins": 30, "draws": 1, "losses": 40, "matches": 71, "tournaments": 15, "winrate": 42.25}}, {"name": "Kalel Alves", "tag": "", "isBora": false, "team": "", "scores": [7.0, 14.0, 21.0, 21.0, 21.0, 21.0, 21.0, 25.0, 32.0, 36.0, 43.0, 60.0, 60.0, 67.0, 77.0, 77.0, 89.0, 96.0, 106.0], "stats": {"points": 106.0, "wins": 27, "draws": 4, "losses": 31, "matches": 62, "tournaments": 13, "winrate": 43.55}}, {"name": "Fabio Ancelmo", "tag": "", "isBora": false, "team": "Fofoletes", "scores": [0.0, 4.0, 4.0, 4.0, 11.0, 11.0, 11.0, 21.0, 34.0, 34.0, 34.0, 59.0, 69.0, 69.0, 79.0, 89.0, 89.0, 103.0, 103.0], "stats": {"points": 103.0, "wins": 27, "draws": 1, "losses": 12, "matches": 40, "tournaments": 9, "winrate": 67.5}}, {"name": "Pedro Medeiros", "tag": "Bora", "isBora": true, "team": "Andiamo", "scores": [0.0, 0.0, 0.0, 11.0, 19.0, 26.0, 36.0, 43.0, 50.0, 60.0, 60.0, 67.0, 74.0, 75.0, 76.0, 80.0, 80.0, 90.0, 97.0], "stats": {"points": 97.0, "wins": 26, "draws": 2, "losses": 33, "matches": 61, "tournaments": 14, "winrate": 42.62}}, {"name": "Pedro Paniago", "tag": "", "isBora": false, "team": "", "scores": [4.0, 4.0, 4.0, 4.0, 4.0, 12.0, 12.0, 12.0, 25.0, 25.0, 25.0, 52.0, 62.0, 69.0, 82.0, 92.0, 92.0, 92.0, 92.0], "stats": {"points": 92.0, "wins": 23, "draws": 2, "losses": 11, "matches": 36, "tournaments": 8, "winrate": 63.89}}, {"name": "Marcos Teixeira", "tag": "", "isBora": false, "team": "Fofoletes", "scores": [10.0, 24.0, 31.0, 31.0, 31.0, 31.0, 31.0, 31.0, 31.0, 41.0, 49.0, 68.0, 75.0, 82.0, 82.0, 82.0, 82.0, 82.0, 82.0], "stats": {"points": 82.0, "wins": 21, "draws": 2, "losses": 14, "matches": 37, "tournaments": 8, "winrate": 56.76}}, {"name": "Leonardo Santiago", "tag": "", "isBora": false, "team": "", "scores": [11.0, 18.0, 22.0, 22.0, 22.0, 22.0, 23.0, 23.0, 33.0, 33.0, 37.0, 58.0, 58.0, 58.0, 58.0, 58.0, 72.0, 82.0, 82.0], "stats": {"points": 82.0, "wins": 20, "draws": 3, "losses": 17, "matches": 40, "tournaments": 9, "winrate": 50.0}}, {"name": "Felipe Pereira", "tag": "", "isBora": false, "team": "", "scores": [13.0, 13.0, 23.0, 24.0, 24.0, 24.0, 35.0, 35.0, 35.0, 35.0, 35.0, 48.0, 55.0, 63.0, 63.0, 70.0, 70.0, 78.0, 79.0], "stats": {"points": 79.0, "wins": 20, "draws": 3, "losses": 17, "matches": 40, "tournaments": 10, "winrate": 50.0}}, {"name": "Tiago Rubo", "tag": "", "isBora": false, "team": "", "scores": [0.0, 10.0, 10.0, 17.0, 17.0, 21.0, 28.0, 39.0, 49.0, 59.0, 59.0, 59.0, 59.0, 59.0, 59.0, 66.0, 66.0, 66.0, 70.0], "stats": {"points": 70.0, "wins": 20, "draws": 1, "losses": 21, "matches": 42, "tournaments": 9, "winrate": 47.62}}, {"name": "Bruno Dourado", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 10.0, 17.0, 17.0, 17.0, 24.0, 24.0, 24.0, 31.0, 38.0, 45.0, 45.0, 52.0, 52.0, 59.0, 59.0, 66.0], "stats": {"points": 66.0, "wins": 18, "draws": 0, "losses": 23, "matches": 41, "tournaments": 9, "winrate": 43.9}}, {"name": "Igor Neiva", "tag": "", "isBora": false, "team": "", "scores": [0.0, 4.0, 4.0, 4.0, 5.0, 5.0, 6.0, 6.0, 6.0, 13.0, 26.0, 39.0, 43.0, 43.0, 48.0, 55.0, 55.0, 62.0, 62.0], "stats": {"points": 62.0, "wins": 15, "draws": 1, "losses": 26, "matches": 42, "tournaments": 10, "winrate": 35.71}}, {"name": "Victor Capanema", "tag": "", "isBora": false, "team": "", "scores": [4.0, 5.0, 15.0, 19.0, 19.0, 24.0, 34.0, 38.0, 38.0, 45.0, 45.0, 45.0, 45.0, 45.0, 45.0, 53.0, 60.0, 60.0, 60.0], "stats": {"points": 60.0, "wins": 16, "draws": 2, "losses": 22, "matches": 40, "tournaments": 10, "winrate": 40.0}}, {"name": "Jonathan Melamed", "tag": "", "isBora": false, "team": "", "scores": [0.0, 11.0, 11.0, 19.0, 32.0, 32.0, 32.0, 32.0, 46.0, 46.0, 46.0, 46.0, 46.0, 46.0, 59.0, 59.0, 59.0, 59.0, 59.0], "stats": {"points": 59.0, "wins": 17, "draws": 3, "losses": 3, "matches": 23, "tournaments": 5, "winrate": 73.91}}, {"name": "Vinicius Ferracini", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 11.0, 18.0, 18.0, 25.0, 27.0, 27.0, 40.0, 47.0, 47.0, 47.0, 47.0, 51.0, 55.0, 56.0], "stats": {"points": 56.0, "wins": 13, "draws": 2, "losses": 23, "matches": 38, "tournaments": 9, "winrate": 34.21}}, {"name": "Pedro Palhares", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 10.0, 17.0, 24.0, 24.0, 24.0, 24.0, 31.0, 38.0, 45.0, 55.0, 55.0, 55.0], "stats": {"points": 55.0, "wins": 16, "draws": 0, "losses": 17, "matches": 33, "tournaments": 7, "winrate": 48.48}}, {"name": "Kelsen Moura", "tag": "", "isBora": false, "team": "Cutes", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 11.0, 11.0, 11.0, 11.0, 21.0, 36.0, 36.0, 36.0, 36.0, 36.0, 36.0, 43.0, 53.0], "stats": {"points": 53.0, "wins": 13, "draws": 1, "losses": 13, "matches": 27, "tournaments": 6, "winrate": 48.15}}, {"name": "Joao Oliveira", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 14.0, 14.0, 14.0, 14.0, 24.0, 24.0, 24.0, 24.0, 24.0, 24.0, 24.0, 24.0, 37.0], "stats": {"points": 37.0, "wins": 11, "draws": 1, "losses": 3, "matches": 15, "tournaments": 3, "winrate": 73.33}}, {"name": "Pedro Miranda", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 13.0, 23.0, 27.0, 37.0], "stats": {"points": 37.0, "wins": 11, "draws": 0, "losses": 7, "matches": 18, "tournaments": 4, "winrate": 61.11}}, {"name": "Ricardo Valim", "tag": "", "isBora": false, "team": "", "scores": [0.0, 4.0, 5.0, 5.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 17.0, 24.0, 28.0, 28.0], "stats": {"points": 28.0, "wins": 7, "draws": 1, "losses": 20, "matches": 28, "tournaments": 6, "winrate": 25.0}}, {"name": "Ivan Brandao", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 7.0, 7.0, 7.0, 7.0, 7.0, 21.0, 21.0, 21.0, 21.0, 25.0, 25.0, 25.0, 25.0, 25.0], "stats": {"points": 25.0, "wins": 7, "draws": 1, "losses": 6, "matches": 14, "tournaments": 3, "winrate": 50.0}}, {"name": "Leo Roque", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 7.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 13.0, 13.0, 17.0, 20.0, 24.0], "stats": {"points": 24.0, "wins": 5, "draws": 3, "losses": 20, "matches": 28, "tournaments": 6, "winrate": 17.86}}, {"name": "Gustavo Cerqueira", "tag": "", "isBora": false, "team": "", "scores": [0.0, 4.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 16.0, 16.0], "stats": {"points": 16.0, "wins": 4, "draws": 0, "losses": 15, "matches": 19, "tournaments": 4, "winrate": 21.05}}, {"name": "John Magic", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 6.0, 6.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0], "stats": {"points": 13.0, "wins": 2, "draws": 1, "losses": 11, "matches": 14, "tournaments": 3, "winrate": 14.29}}, {"name": "Lucas Andre", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 10.0, 10.0, 10.0, 10.0, 10.0], "stats": {"points": 10.0, "wins": 3, "draws": 0, "losses": 2, "matches": 5, "tournaments": 1, "winrate": 60.0}}, {"name": "Rafael Misael", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4.0, 4.0, 8.0, 8.0, 8.0], "stats": {"points": 8.0, "wins": 2, "draws": 0, "losses": 8, "matches": 10, "tournaments": 2, "winrate": 20.0}}, {"name": "Miguel Molina", "tag": "", "isBora": false, "team": "", "scores": [7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0], "stats": {"points": 7.0, "wins": 2, "draws": 0, "losses": 3, "matches": 5, "tournaments": 1, "winrate": 40.0}}, {"name": "Marcus Estrela", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0], "stats": {"points": 7.0, "wins": 1, "draws": 0, "losses": 4, "matches": 5, "tournaments": 1, "winrate": 20.0}}, {"name": "Tiago Borges", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 5.0, 5.0, 5.0, 5.0], "stats": {"points": 5.0, "wins": 1, "draws": 1, "losses": 3, "matches": 5, "tournaments": 1, "winrate": 20.0}}, {"name": "Bruno Guimaraes", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0], "stats": {"points": 4.0, "wins": 1, "draws": 0, "losses": 4, "matches": 5, "tournaments": 1, "winrate": 20.0}}, {"name": "Samir Tarilonte", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4.0, 4.0, 4.0, 4.0, 4.0], "stats": {"points": 4.0, "wins": 1, "draws": 0, "losses": 2, "matches": 3, "tournaments": 1, "winrate": 33.33}}]};
+    const EMBEDDED_DATA = {"spreadsheetId": "1BjaihYOGkMi5TJyt8fOigRs7er7e0XbHoNbsaU48yy4", "sheetName": "Pontos_ate_semana", "rankingSheetName": "RANKING_MODERN", "spreadsheetTitle": "PRI_Teste", "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1BjaihYOGkMi5TJyt8fOigRs7er7e0XbHoNbsaU48yy4/edit", "dates": ["2/7/26", "9/7/26", "16/7/26", "23/7/26", "30/7/26", "6/8/26", "13/8/26", "20/8/26", "27/8/26", "3/9/26", "10/9/26", "17/9/26", "24/9/26", "1/10/26", "8/10/26", "15/10/26", "22/10/26", "29/10/26", "5/11/26"], "players": [{"name": "Eduardo Caruso", "tag": "Bora", "isBora": true, "team": "Bora", "scores": [13.0, 24.0, 31.0, 39.0, 44.0, 55.0, 68.0, 68.0, 78.0, 91.0, 104.0, 129.0, 139.0, 146.0, 156.0, 166.0, 177.0, 190.0, 190.0], "stats": {"points": 190.0, "wins": 52, "draws": 6, "losses": 21, "matches": 79, "tournaments": 17, "winrate": 65.82}}, {"name": "Edgar Bruno", "tag": "Bora", "isBora": true, "team": "Bora", "scores": [0.0, 7.0, 18.0, 25.0, 33.0, 41.0, 51.0, 58.0, 58.0, 65.0, 75.0, 94.0, 95.0, 99.0, 106.0, 119.0, 126.0, 136.0, 150.0], "stats": {"points": 150.0, "wins": 40, "draws": 4, "losses": 34, "matches": 78, "tournaments": 17, "winrate": 51.28}}, {"name": "Arthur Matos", "tag": "", "isBora": false, "team": "", "scores": [10.0, 20.0, 20.0, 20.0, 30.0, 40.0, 50.0, 50.0, 61.0, 74.0, 75.0, 102.0, 102.0, 102.0, 113.0, 117.0, 127.0, 140.0, 150.0], "stats": {"points": 150.0, "wins": 40, "draws": 3, "losses": 22, "matches": 65, "tournaments": 14, "winrate": 61.54}}, {"name": "Victor Marques", "tag": "Bora", "isBora": true, "team": "Bora", "scores": [10.0, 21.0, 21.0, 21.0, 31.0, 31.0, 38.0, 38.0, 45.0, 59.0, 70.0, 83.0, 87.0, 98.0, 111.0, 111.0, 124.0, 135.0, 148.0], "stats": {"points": 148.0, "wins": 41, "draws": 5, "losses": 21, "matches": 67, "tournaments": 14, "winrate": 61.19}}, {"name": "Gamaliel Cardoso", "tag": "", "isBora": false, "team": "", "scores": [8.0, 15.0, 25.0, 29.0, 30.0, 35.0, 48.0, 52.0, 59.0, 63.0, 70.0, 79.0, 87.0, 97.0, 107.0, 117.0, 124.0, 129.0, 140.0], "stats": {"points": 140.0, "wins": 37, "draws": 6, "losses": 43, "matches": 86, "tournaments": 19, "winrate": 43.02}}, {"name": "Deric Sousa", "tag": "", "isBora": false, "team": "", "scores": [0.0, 10.0, 10.0, 21.0, 25.0, 29.0, 42.0, 49.0, 59.0, 70.0, 83.0, 96.0, 97.0, 107.0, 117.0, 117.0, 121.0, 131.0, 138.0], "stats": {"points": 138.0, "wins": 38, "draws": 2, "losses": 30, "matches": 70, "tournaments": 16, "winrate": 54.29}}, {"name": "Welber Alves", "tag": "", "isBora": false, "team": "", "scores": [10.0, 20.0, 27.0, 27.0, 27.0, 27.0, 27.0, 37.0, 47.0, 57.0, 61.0, 80.0, 80.0, 90.0, 97.0, 110.0, 117.0, 124.0, 131.0], "stats": {"points": 131.0, "wins": 36, "draws": 0, "losses": 31, "matches": 67, "tournaments": 14, "winrate": 53.73}}, {"name": "Giovanni Santin", "tag": "", "isBora": false, "team": "", "scores": [8.0, 21.0, 21.0, 28.0, 28.0, 28.0, 35.0, 39.0, 52.0, 52.0, 52.0, 71.0, 82.0, 86.0, 96.0, 109.0, 116.0, 129.0, 129.0], "stats": {"points": 129.0, "wins": 35, "draws": 2, "losses": 24, "matches": 61, "tournaments": 13, "winrate": 57.38}}, {"name": "Aimbere Mendonça", "tag": "", "isBora": false, "team": "", "scores": [4.0, 11.0, 15.0, 25.0, 32.0, 36.0, 43.0, 47.0, 54.0, 67.0, 74.0, 95.0, 102.0, 106.0, 107.0, 118.0, 118.0, 118.0, 125.0], "stats": {"points": 125.0, "wins": 32, "draws": 2, "losses": 40, "matches": 74, "tournaments": 17, "winrate": 43.24}}, {"name": "Joao Flecha", "tag": "", "isBora": false, "team": "", "scores": [7.0, 14.0, 18.0, 22.0, 22.0, 22.0, 29.0, 40.0, 47.0, 54.0, 64.0, 83.0, 93.0, 93.0, 93.0, 100.0, 113.0, 123.0, 123.0], "stats": {"points": 123.0, "wins": 33, "draws": 1, "losses": 32, "matches": 66, "tournaments": 14, "winrate": 50.0}}, {"name": "Samuel Gomes", "tag": "Bora", "isBora": true, "team": "Bora", "scores": [13.0, 13.0, 24.0, 28.0, 39.0, 39.0, 49.0, 49.0, 50.0, 50.0, 50.0, 63.0, 63.0, 73.0, 87.0, 88.0, 98.0, 108.0, 118.0], "stats": {"points": 118.0, "wins": 32, "draws": 3, "losses": 22, "matches": 57, "tournaments": 13, "winrate": 56.14}}, {"name": "Ricardo Castro", "tag": "", "isBora": false, "team": "", "scores": [7.0, 14.0, 14.0, 14.0, 21.0, 28.0, 35.0, 42.0, 46.0, 56.0, 61.0, 74.0, 74.0, 78.0, 85.0, 85.0, 95.0, 102.0, 112.0], "stats": {"points": 112.0, "wins": 30, "draws": 1, "losses": 40, "matches": 71, "tournaments": 15, "winrate": 42.25}}, {"name": "Kalel Alves", "tag": "", "isBora": false, "team": "", "scores": [7.0, 14.0, 21.0, 21.0, 21.0, 21.0, 21.0, 25.0, 32.0, 36.0, 43.0, 60.0, 60.0, 67.0, 77.0, 77.0, 89.0, 96.0, 106.0], "stats": {"points": 106.0, "wins": 27, "draws": 4, "losses": 31, "matches": 62, "tournaments": 13, "winrate": 43.55}}, {"name": "Fabio Ancelmo", "tag": "", "isBora": false, "team": "", "scores": [0.0, 4.0, 4.0, 4.0, 11.0, 11.0, 11.0, 21.0, 34.0, 34.0, 34.0, 59.0, 69.0, 69.0, 79.0, 89.0, 89.0, 103.0, 103.0], "stats": {"points": 103.0, "wins": 27, "draws": 1, "losses": 12, "matches": 40, "tournaments": 9, "winrate": 67.5}}, {"name": "Pedro Medeiros", "tag": "Bora", "isBora": true, "team": "Bora", "scores": [0.0, 0.0, 0.0, 11.0, 19.0, 26.0, 36.0, 43.0, 50.0, 60.0, 60.0, 67.0, 74.0, 75.0, 76.0, 80.0, 80.0, 90.0, 97.0], "stats": {"points": 97.0, "wins": 26, "draws": 2, "losses": 33, "matches": 61, "tournaments": 14, "winrate": 42.62}}, {"name": "Pedro Paniago", "tag": "", "isBora": false, "team": "", "scores": [4.0, 4.0, 4.0, 4.0, 4.0, 12.0, 12.0, 12.0, 25.0, 25.0, 25.0, 52.0, 62.0, 69.0, 82.0, 92.0, 92.0, 92.0, 92.0], "stats": {"points": 92.0, "wins": 23, "draws": 2, "losses": 11, "matches": 36, "tournaments": 8, "winrate": 63.89}}, {"name": "Marcos Teixeira", "tag": "", "isBora": false, "team": "", "scores": [10.0, 24.0, 31.0, 31.0, 31.0, 31.0, 31.0, 31.0, 31.0, 41.0, 49.0, 68.0, 75.0, 82.0, 82.0, 82.0, 82.0, 82.0, 82.0], "stats": {"points": 82.0, "wins": 21, "draws": 2, "losses": 14, "matches": 37, "tournaments": 8, "winrate": 56.76}}, {"name": "Leonardo Santiago", "tag": "", "isBora": false, "team": "", "scores": [11.0, 18.0, 22.0, 22.0, 22.0, 22.0, 23.0, 23.0, 33.0, 33.0, 37.0, 58.0, 58.0, 58.0, 58.0, 58.0, 72.0, 82.0, 82.0], "stats": {"points": 82.0, "wins": 20, "draws": 3, "losses": 17, "matches": 40, "tournaments": 9, "winrate": 50.0}}, {"name": "Felipe Pereira", "tag": "", "isBora": false, "team": "", "scores": [13.0, 13.0, 23.0, 24.0, 24.0, 24.0, 35.0, 35.0, 35.0, 35.0, 35.0, 48.0, 55.0, 63.0, 63.0, 70.0, 70.0, 78.0, 79.0], "stats": {"points": 79.0, "wins": 20, "draws": 3, "losses": 17, "matches": 40, "tournaments": 10, "winrate": 50.0}}, {"name": "Tiago Rubo", "tag": "", "isBora": false, "team": "", "scores": [0.0, 10.0, 10.0, 17.0, 17.0, 21.0, 28.0, 39.0, 49.0, 59.0, 59.0, 59.0, 59.0, 59.0, 59.0, 66.0, 66.0, 66.0, 70.0], "stats": {"points": 70.0, "wins": 20, "draws": 1, "losses": 21, "matches": 42, "tournaments": 9, "winrate": 47.62}}, {"name": "Bruno Dourado", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 10.0, 17.0, 17.0, 17.0, 24.0, 24.0, 24.0, 31.0, 38.0, 45.0, 45.0, 52.0, 52.0, 59.0, 59.0, 66.0], "stats": {"points": 66.0, "wins": 18, "draws": 0, "losses": 23, "matches": 41, "tournaments": 9, "winrate": 43.9}}, {"name": "Igor Neiva", "tag": "", "isBora": false, "team": "", "scores": [0.0, 4.0, 4.0, 4.0, 5.0, 5.0, 6.0, 6.0, 6.0, 13.0, 26.0, 39.0, 43.0, 43.0, 48.0, 55.0, 55.0, 62.0, 62.0], "stats": {"points": 62.0, "wins": 15, "draws": 1, "losses": 26, "matches": 42, "tournaments": 10, "winrate": 35.71}}, {"name": "Victor Capanema", "tag": "", "isBora": false, "team": "", "scores": [4.0, 5.0, 15.0, 19.0, 19.0, 24.0, 34.0, 38.0, 38.0, 45.0, 45.0, 45.0, 45.0, 45.0, 45.0, 53.0, 60.0, 60.0, 60.0], "stats": {"points": 60.0, "wins": 16, "draws": 2, "losses": 22, "matches": 40, "tournaments": 10, "winrate": 40.0}}, {"name": "Jonathan Melamed", "tag": "", "isBora": false, "team": "", "scores": [0.0, 11.0, 11.0, 19.0, 32.0, 32.0, 32.0, 32.0, 46.0, 46.0, 46.0, 46.0, 46.0, 46.0, 59.0, 59.0, 59.0, 59.0, 59.0], "stats": {"points": 59.0, "wins": 17, "draws": 3, "losses": 3, "matches": 23, "tournaments": 5, "winrate": 73.91}}, {"name": "Vinicius Ferracini", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 11.0, 18.0, 18.0, 25.0, 27.0, 27.0, 40.0, 47.0, 47.0, 47.0, 47.0, 51.0, 55.0, 56.0], "stats": {"points": 56.0, "wins": 13, "draws": 2, "losses": 23, "matches": 38, "tournaments": 9, "winrate": 34.21}}, {"name": "Pedro Palhares", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 10.0, 17.0, 24.0, 24.0, 24.0, 24.0, 31.0, 38.0, 45.0, 55.0, 55.0, 55.0], "stats": {"points": 55.0, "wins": 16, "draws": 0, "losses": 17, "matches": 33, "tournaments": 7, "winrate": 48.48}}, {"name": "Kelsen Moura", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 11.0, 11.0, 11.0, 11.0, 21.0, 36.0, 36.0, 36.0, 36.0, 36.0, 36.0, 43.0, 53.0], "stats": {"points": 53.0, "wins": 13, "draws": 1, "losses": 13, "matches": 27, "tournaments": 6, "winrate": 48.15}}, {"name": "Joao Oliveira", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 14.0, 14.0, 14.0, 14.0, 24.0, 24.0, 24.0, 24.0, 24.0, 24.0, 24.0, 24.0, 37.0], "stats": {"points": 37.0, "wins": 11, "draws": 1, "losses": 3, "matches": 15, "tournaments": 3, "winrate": 73.33}}, {"name": "Pedro Miranda", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 13.0, 23.0, 27.0, 37.0], "stats": {"points": 37.0, "wins": 11, "draws": 0, "losses": 7, "matches": 18, "tournaments": 4, "winrate": 61.11}}, {"name": "Ricardo Valim", "tag": "", "isBora": false, "team": "", "scores": [0.0, 4.0, 5.0, 5.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 17.0, 24.0, 28.0, 28.0], "stats": {"points": 28.0, "wins": 7, "draws": 1, "losses": 20, "matches": 28, "tournaments": 6, "winrate": 25.0}}, {"name": "Ivan Brandao", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 7.0, 7.0, 7.0, 7.0, 7.0, 21.0, 21.0, 21.0, 21.0, 25.0, 25.0, 25.0, 25.0, 25.0], "stats": {"points": 25.0, "wins": 7, "draws": 1, "losses": 6, "matches": 14, "tournaments": 3, "winrate": 50.0}}, {"name": "Leo Roque", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 7.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 13.0, 13.0, 17.0, 20.0, 24.0], "stats": {"points": 24.0, "wins": 5, "draws": 3, "losses": 20, "matches": 28, "tournaments": 6, "winrate": 17.86}}, {"name": "Gustavo Cerqueira", "tag": "", "isBora": false, "team": "", "scores": [0.0, 4.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 16.0, 16.0], "stats": {"points": 16.0, "wins": 4, "draws": 0, "losses": 15, "matches": 19, "tournaments": 4, "winrate": 21.05}}, {"name": "John Magic", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 6.0, 6.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0], "stats": {"points": 13.0, "wins": 2, "draws": 1, "losses": 11, "matches": 14, "tournaments": 3, "winrate": 14.29}}, {"name": "Lucas Andre", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 10.0, 10.0, 10.0, 10.0, 10.0], "stats": {"points": 10.0, "wins": 3, "draws": 0, "losses": 2, "matches": 5, "tournaments": 1, "winrate": 60.0}}, {"name": "Rafael Misael", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4.0, 4.0, 8.0, 8.0, 8.0], "stats": {"points": 8.0, "wins": 2, "draws": 0, "losses": 8, "matches": 10, "tournaments": 2, "winrate": 20.0}}, {"name": "Miguel Molina", "tag": "", "isBora": false, "team": "", "scores": [7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0], "stats": {"points": 7.0, "wins": 2, "draws": 0, "losses": 3, "matches": 5, "tournaments": 1, "winrate": 40.0}}, {"name": "Marcus Estrela", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0], "stats": {"points": 7.0, "wins": 1, "draws": 0, "losses": 4, "matches": 5, "tournaments": 1, "winrate": 20.0}}, {"name": "Tiago Borges", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 5.0, 5.0, 5.0, 5.0], "stats": {"points": 5.0, "wins": 1, "draws": 1, "losses": 3, "matches": 5, "tournaments": 1, "winrate": 20.0}}, {"name": "Bruno Guimaraes", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0], "stats": {"points": 4.0, "wins": 1, "draws": 0, "losses": 4, "matches": 5, "tournaments": 1, "winrate": 20.0}}, {"name": "Samir Tarilonte", "tag": "", "isBora": false, "team": "", "scores": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4.0, 4.0, 4.0, 4.0, 4.0], "stats": {"points": 4.0, "wins": 1, "draws": 0, "losses": 2, "matches": 3, "tournaments": 1, "winrate": 33.33}}]};
 
-    // masterData holds the full cumulative season dataset; appData holds the active view (General or Monthly)
     let masterData = JSON.parse(JSON.stringify(EMBEDDED_DATA));
     let appData = JSON.parse(JSON.stringify(EMBEDDED_DATA));
 
-    // Available months dynamically extracted from masterData.dates
-    let availableMonths = []; // [{ key: '2026-07', month: 7, year: '26', fullLabel: 'Julho/26', shortLabel: 'Jul/26', weekIndices: [0,1,2,3,4] }, ...]
-    let selectedMonthKey = 'ALL'; // 'ALL' = Rank Geral, or 'YYYY-MM' (e.g. '26-07')
+    let availableMonths = [];
+    let selectedMonthKey = 'ALL';
 
     // Animation & Race Constants
     const TOP_N = 15;
@@ -1224,7 +1232,7 @@
     let speedMultiplier = 1.0;
     let highlightBoraColor = false; // Default false = all bars red (#d36566); true = Bora turquoise (#46b9ac)
     let isWideMode = false; // False = 9:16 Mobile (default), True = Wide (820x776)
-    let progressFloat = 0.0; // 0 to (appData.dates.length - 1)
+    let progressFloat = 0.0;
     let lastTimestamp = null;
     let isSettlingRanks = false;
     let isRecordingVideo = false;
@@ -1232,7 +1240,6 @@
     let lastRecordedFile = null;
     let lastRecordedUrl = null;
 
-    // Precomputed discrete weekly ranks & weekly MVP strings for active view
     let discreteWeeklyRanks = [];
     let weeklyMvpByWeek = [];
 
@@ -1257,6 +1264,7 @@
     const btnMonthlyRank = document.getElementById('btnMonthlyRank');
     const monthlyDropdownMenu = document.getElementById('monthlyDropdownMenu');
     const btnDownloadVideo = document.getElementById('btnDownloadVideo');
+    const latestTournamentBadge = document.getElementById('latestTournamentBadge');
     const exportCanvas = document.getElementById('exportCanvas');
     const speedSelect = document.getElementById('speedSelect');
 
@@ -1283,12 +1291,10 @@
     const btnShareVideoNative = document.getElementById('btnShareVideoNative');
     const btnDirectVideoDownload = document.getElementById('btnDirectVideoDownload');
 
-    // Map of player name -> DOM elements
     let barElements = new Map();
     let boraChipElements = new Map();
     let axisTickElements = new Map();
 
-    // Parse a single raw date or a list of dates into { day, month, yearShort, label }
     function parseSingleDateParts(raw, assumeMDY = false) {
       if (!raw) return null;
       const s = String(raw).trim();
@@ -1327,7 +1333,6 @@
     }
 
     function parseDateListSmart(rawDates) {
-      // Detect if a live gviz feed ever returned M/D/Y instead of D/M/Y
       let hasFirstOver12 = false;
       let hasSecondOver12 = false;
       rawDates.forEach(raw => {
@@ -1353,7 +1358,13 @@
       return parsed ? parsed.label : String(raw || '').trim();
     }
 
-    // Dynamically extract all months present in masterData.dates
+    function updateLatestTournamentBadge() {
+      if (!latestTournamentBadge) return;
+      const parsed = parseDateListSmart(masterData.dates || []);
+      const lastDate = parsed.length > 0 ? parsed[parsed.length - 1].label : '—';
+      latestTournamentBadge.textContent = `🗓️ Últ. torneio: ${lastDate}`;
+    }
+
     function extractAvailableMonthsFromMaster() {
       const parsedList = parseDateListSmart(masterData.dates || []);
       const monthMap = new Map();
@@ -1387,7 +1398,6 @@
     function renderMonthlyDropdownMenu() {
       monthlyDropdownMenu.innerHTML = '';
 
-      // 1. General Rank Option ("Rank Geral (Completo)")
       const allBtn = document.createElement('button');
       allBtn.type = 'button';
       allBtn.className = `month-menu-item ${selectedMonthKey === 'ALL' ? 'selected' : ''}`;
@@ -1408,7 +1418,6 @@
         monthlyDropdownMenu.appendChild(div);
       }
 
-      // 2. Dynamic Month Options read from the spreadsheet dates
       availableMonths.forEach(mObj => {
         const btn = document.createElement('button');
         btn.type = 'button';
@@ -1435,7 +1444,6 @@
       return isWideMode ? `Rank Mensal — ${mObj.fullLabel}` : `Rank Mensal (${mObj.shortLabel})`;
     }
 
-    // Switch between General Rank ('ALL') and a specific Month ('YY-MM')
     function selectRankingMode(modeKey, keepProgress = false) {
       selectedMonthKey = modeKey;
       const parsedMasterDates = parseDateListSmart(masterData.dates || []);
@@ -1444,9 +1452,11 @@
         appData = {
           ...masterData,
           isMonthlyMode: false,
+          isSingleWeekMonth: false,
           activeMonthObj: null,
           dates: [...masterData.dates],
           DatesNormalized: parsedMasterDates.map(d => d.label),
+          ScrubberDates: parsedMasterDates.map(d => d.label),
           players: masterData.players.map(p => ({
             ...p,
             scores: [...p.scores]
@@ -1531,7 +1541,6 @@
         });
         discreteWeeklyRanks.push(rMap);
 
-        // Compute MVP(s) with highest point gain in week w
         let maxGain = 0;
         let winners = [];
         appData.players.forEach(p => {
@@ -1584,7 +1593,6 @@
 
       const boraPlayers = appData.players.filter(p => p.isBora);
 
-      // Create persistent DOM elements for each player bar
       appData.players.forEach((player) => {
         const row = document.createElement('div');
         row.className = `bar-row ${player.isBora ? 'is-bora' : 'is-other'}`;
@@ -1642,7 +1650,6 @@
         });
       });
 
-      // Create persistent DOM elements for Bora summary chips
       boraPlayers.forEach((player) => {
         const chip = document.createElement('div');
         chip.className = 'bora-chip';
@@ -1784,7 +1791,6 @@
           : `Semana: ${activeDateStr}`;
       }
 
-      // Suggestion #2: Update Weekly MVP Badge
       const mvpInfo = weeklyMvpByWeek[activeWeekIdx] || { mobileText: '🔥 MVP: —', wideText: '🔥 MVP: —' };
       const targetMvpText = isWideMode ? mvpInfo.wideText : mvpInfo.mobileText;
       if (mvpBanner.textContent !== targetMvpText) {
@@ -1828,11 +1834,9 @@
 
       currentStandings.sort((a, b) => {
         if (Math.abs(b.score - a.score) > 0.0001) return b.score - a.score;
-        // At t = 0 in Monthly mode (everyone at 0 pts), sort ties by Week 1 target score so players line up smoothly
         if (appData.isSingleWeekMonth && idx0 === 0 && Math.abs(b.nextScore - a.nextScore) > 0.0001) {
           return b.nextScore - a.nextScore;
         }
-        // If tied at the end of a week, keep the player who was already ahead entering the week on top (avoids sudden alphabetical jump at 100%)
         if (Math.abs(b.prevScore - a.prevScore) > 0.0001) {
           return b.prevScore - a.prevScore;
         }
@@ -2058,7 +2062,7 @@
       }
     });
 
-    // 2D Canvas renderer for video export (reflects Monthly Mode, highlightBoraColor & MVP badge!)
+    // 2D Canvas renderer for video export
     function drawRaceCardToCanvas(clampedT, currentStandings, maxScore, activeDateStr, totalPct, mvpText, idx0) {
       const ctx = exportCanvas.getContext('2d');
       const W = isWideMode ? 820 : 460;
@@ -2076,7 +2080,6 @@
       ctx.lineWidth = 2;
       ctx.strokeRect(1, 1, W - 2, H - 2);
 
-      // Header divider
       ctx.strokeStyle = '#dcdcdc';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
@@ -2084,7 +2087,6 @@
       ctx.lineTo(W, 46);
       ctx.stroke();
 
-      // Header Title (shows Monthly Rank title when in Monthly mode)
       const headerTitleStr = getHeaderTitleText();
       ctx.fillStyle = '#ffffff';
       ctx.font = `700 ${isWideMode ? 18 : 16.5}px ${monoFont}`;
@@ -2092,7 +2094,6 @@
       ctx.textBaseline = 'middle';
       ctx.fillText(headerTitleStr, 14, 23);
 
-      // Suggestion #2: Draw Weekly MVP pill in Header
       if (mvpText) {
         ctx.save();
         const mvpFontSz = isWideMode ? 12 : 10.5;
@@ -2160,7 +2161,6 @@
         ctx.textBaseline = 'middle';
         ctx.fillText(`${rankNum}º`, xLeft - 5, y + BAR_HEIGHT / 2 + 0.5);
 
-        // Only color Bora bars turquoise (#46b9ac) when highlightBoraColor is true; otherwise all bars are red (#d36566)
         ctx.fillStyle = (highlightBoraColor && item.isBora) ? '#46b9ac' : '#d36566';
         ctx.fillRect(xLeft, y, barW, BAR_HEIGHT);
 
@@ -2314,7 +2314,6 @@
         });
       }
 
-      // Imperceptible 1x1 pixel pulse so hardware encoders & GIF/loop players never drop the 5s static hold frames
       ctx.fillStyle = (Math.floor(performance.now() / 33) % 2 === 0) ? '#25262b' : '#26272c';
       ctx.fillRect(W - 2, H - 2, 1, 1);
 
@@ -2525,7 +2524,6 @@
       requestAnimationFrame(animationLoop);
     }
 
-    // Play / Pause button
     bindTap(playPauseBtn, () => {
       if (!isPlaying && progressFloat >= appData.dates.length - 1) {
         progressFloat = 0;
@@ -2536,7 +2534,6 @@
       updatePlayPauseIcons();
     });
 
-    // Scrubber drag & click interaction (mouse + touch)
     let isDraggingScrubber = false;
     function seekFromEvent(e) {
       const rect = scrubberContainer.getBoundingClientRect();
@@ -2577,7 +2574,6 @@
       isDraggingScrubber = false;
     });
 
-    // "Destacar Bora" toggles Bora bar color between default red (#d36566) and turquoise (#46b9ac)
     bindTap(btnHighlightBora, () => {
       highlightBoraColor = !highlightBoraColor;
       btnHighlightBora.classList.toggle('active', highlightBoraColor);
@@ -2585,12 +2581,10 @@
       renderFrame(progressFloat, true);
     });
 
-    // Speed selector
     speedSelect.addEventListener('change', (e) => {
       speedMultiplier = parseFloat(e.target.value) || 1.0;
     });
 
-    // Automatic background live Google Sheets sync (keeps data & months dynamically updated from PRI_Teste)
     function fetchFromGoogleSheetsJSONP(sheetId, sheetName) {
       return new Promise((resolve, reject) => {
         const callbackName = 'gvizCallback_' + Math.random().toString(36).substring(2, 9);
@@ -2737,7 +2731,8 @@
       });
     }
 
-    // Initialize dynamic months & start animation
+    // Initialize dynamic months, latest tournament badge & start animation
+    updateLatestTournamentBadge();
     extractAvailableMonthsFromMaster();
     selectRankingMode('ALL', true);
     requestAnimationFrame(animationLoop);
@@ -2748,6 +2743,7 @@
         const parsed = parseGvizTable(table);
         masterData.dates = parsed.dates;
         masterData.players = parsed.players;
+        updateLatestTournamentBadge();
         extractAvailableMonthsFromMaster();
         selectRankingMode(selectedMonthKey, true);
         return fetchFromGoogleSheetsJSONP(masterData.spreadsheetId, 'RANKING_MODERN');
