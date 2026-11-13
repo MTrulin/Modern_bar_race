@@ -57,16 +57,14 @@ def main():
         return
 
     cabecalho = linhas[0]
-    ultima_col = -1
     ultima_data = ""
     for i in range(len(cabecalho) - 1, 1, -1):
         val = cabecalho[i].strip()
         if val:
-            ultima_col = i
             ultima_data = val
             break
 
-    if ultima_col == -1 or not ultima_data:
+    if not ultima_data:
         print("Nenhuma data encontrada.")
         return
 
@@ -85,49 +83,10 @@ def main():
         print("Nenhuma novidade. Última data continua sendo:", ultima_data)
         return
 
-    col_ant = ultima_col - 1 if ultima_col > 2 else -1
-    ranking = []
-    max_ganho = 0
-    mvps = []
-
-    for linha in linhas[1:]:
-        if len(linha) <= ultima_col:
-            continue
-        nome = linha[0].strip()
-        if not nome:
-            continue
-        try:
-            atual = float(linha[ultima_col].replace(",", ".") or 0)
-        except ValueError:
-            atual = 0.0
-        anterior = 0.0
-        if col_ant >= 2 and len(linha) > col_ant:
-            try:
-                anterior = float(linha[col_ant].replace(",", ".") or 0)
-            except ValueError:
-                anterior = 0.0
-
-        ganho = round(atual - anterior)
-        ranking.append((atual, nome))
-        if ganho > max_ganho:
-            max_ganho = ganho
-            mvps = [nome]
-        elif ganho > 0 and ganho == max_ganho:
-            mvps.append(nome)
-
-    ranking.sort(reverse=True)
-
-    msg = f"Nova data registrada na planilha: {ultima_data}\n"
-    if max_ganho > 0 and mvps:
-        msg += f"🔥 MVP da semana: {' & '.join(mvps)} (+{max_ganho} pts)\n"
-    if len(ranking) >= 3:
-        msg += (
-            f"🏆 Top 3: 1º {ranking[0][1]} ({int(ranking[0][0])}) | "
-            f"2º {ranking[1][1]} ({int(ranking[1][0])}) | "
-            f"3º {ranking[2][1]} ({int(ranking[2][0])})"
-        )
-
-    enviar_ntfy(f"Novo Torneio Modern ({ultima_data})", msg)
+    enviar_ntfy(
+        f"Novo Torneio Modern ({ultima_data})",
+        f"Um novo torneio ({ultima_data}) foi inserido na planilha.",
+    )
 
     with open(ARQUIVO_ESTADO, "w", encoding="utf-8") as f:
         f.write(ultima_data)
