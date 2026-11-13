@@ -500,6 +500,7 @@
       line-height: 1;
     }
 
+
     .bar-rank-shift {
       font-family: var(--font-mono);
       font-size: 10px;
@@ -1000,10 +1001,11 @@
       <!-- Dynamic Monthly Rank Selector Button & Menu right next to Modo Largo -->
       <div class="month-dropdown-wrap" id="monthDropdownWrap">
         <button type="button" class="btn-tool" id="btnMonthlyRank" title="Escolher um mês para ver o Bar Race mensal">
-          📅 Rank Mensal ▾
+          📅 Mensal ▾
         </button>
         <div class="month-dropdown-menu" id="monthlyDropdownMenu"></div>
       </div>
+
     </div>
 
     <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
@@ -1066,15 +1068,6 @@
         <div class="scrubber-ticks" id="scrubberTicks"></div>
       </div>
     </div>
-  </div>
-
-  <!-- Live Bora Players Tracker -->
-  <div class="bora-summary">
-    <div class="summary-header">
-      <span>Desempenho — Jogadores <strong>Bora</strong> <span style="font-weight:400; color:#9ca3af; font-size:11px;">(toque para detalhes)</span></span>
-      <span id="summaryDateLabel" style="color: #9ca3af; font-family: var(--font-mono); font-size: 11.5px;">Semana: 2/7/26</span>
-    </div>
-    <div class="bora-chips" id="boraChipsContainer"></div>
   </div>
 
   <!-- Player Profile & Statistics Modal -->
@@ -1144,7 +1137,7 @@
   (function() {
     // Self-healing deduplicator in case an editor ever concatenates two HTML copies
     function deduplicateDOM() {
-      const selectors = ['.top-toolbar', '.race-card', '.bora-summary', '#playerModal', '#videoReadyModal', '#exportCanvas'];
+      const selectors = ['.top-toolbar', '.race-card', '#playerModal', '#videoReadyModal', '#exportCanvas'];
       selectors.forEach(sel => {
         const list = document.querySelectorAll(sel);
         for (let i = 1; i < list.length; i++) list[i].remove();
@@ -1249,7 +1242,6 @@
     const axisLayer = document.getElementById('axisLayer');
     const dateWatermark = document.getElementById('dateWatermark');
     const mvpBanner = document.getElementById('mvpBanner');
-    const summaryDateLabel = document.getElementById('summaryDateLabel');
     const scrubberProgress = document.getElementById('scrubberProgress');
     const scrubberHandle = document.getElementById('scrubberHandle');
     const scrubberTicks = document.getElementById('scrubberTicks');
@@ -1257,7 +1249,6 @@
     const playPauseBtn = document.getElementById('playPauseBtn');
     const iconPause = document.getElementById('iconPause');
     const iconPlay = document.getElementById('iconPlay');
-    const boraChipsContainer = document.getElementById('boraChipsContainer');
     const btnHighlightBora = document.getElementById('btnHighlightBora');
     const btnToggleFormat = document.getElementById('btnToggleFormat');
     const monthDropdownWrap = document.getElementById('monthDropdownWrap');
@@ -1292,7 +1283,6 @@
     const btnDirectVideoDownload = document.getElementById('btnDirectVideoDownload');
 
     let barElements = new Map();
-    let boraChipElements = new Map();
     let axisTickElements = new Map();
 
     function parseSingleDateParts(raw, assumeMDY = false) {
@@ -1462,7 +1452,7 @@
             scores: [...p.scores]
           }))
         };
-        btnMonthlyRank.textContent = '📅 Rank Mensal ▾';
+        btnMonthlyRank.textContent = '📅 Mensal ▾';
         btnMonthlyRank.classList.remove('active');
       } else {
         const mObj = availableMonths.find(m => m.key === modeKey);
@@ -1582,16 +1572,12 @@
 
     function initChartDOM() {
       barsLayer.innerHTML = '';
-      boraChipsContainer.innerHTML = '';
       barElements.clear();
-      boraChipElements.clear();
 
       if (!appData.DatesNormalized || appData.DatesNormalized.length !== appData.dates.length) {
         appData.DatesNormalized = appData.dates.map(normalizeDateLabel);
       }
       computeDiscreteWeeklyRanksAndMvps();
-
-      const boraPlayers = appData.players.filter(p => p.isBora);
 
       appData.players.forEach((player) => {
         const row = document.createElement('div');
@@ -1647,38 +1633,6 @@
           shiftSpan,
           currentVisualRank: TOP_N + 2,
           initialized: false
-        });
-      });
-
-      boraPlayers.forEach((player) => {
-        const chip = document.createElement('div');
-        chip.className = 'bora-chip';
-        bindTap(chip, () => openPlayerModal(player.name));
-
-        const topRow = document.createElement('div');
-        topRow.className = 'bora-chip-top';
-
-        const rankSpan = document.createElement('span');
-        rankSpan.textContent = '#1';
-
-        const ptsSpan = document.createElement('span');
-        ptsSpan.textContent = '0 pts';
-
-        topRow.appendChild(rankSpan);
-        topRow.appendChild(ptsSpan);
-
-        const nameDiv = document.createElement('div');
-        nameDiv.className = 'bora-chip-name';
-        nameDiv.textContent = player.name;
-
-        chip.appendChild(topRow);
-        chip.appendChild(nameDiv);
-        boraChipsContainer.appendChild(chip);
-
-        boraChipElements.set(player.name, {
-          chip,
-          rankSpan,
-          ptsSpan
         });
       });
 
@@ -1786,9 +1740,6 @@
       const activeDateStr = appData.DatesNormalized[dateIdx] || '';
       if (dateWatermark.textContent !== activeDateStr) {
         dateWatermark.textContent = activeDateStr;
-        summaryDateLabel.textContent = appData.isMonthlyMode
-          ? `${appData.activeMonthObj.fullLabel} — ${activeDateStr}`
-          : `Semana: ${activeDateStr}`;
       }
 
       const mvpInfo = weeklyMvpByWeek[activeWeekIdx] || { mobileText: '🔥 MVP: —', wideText: '🔥 MVP: —' };
@@ -1911,16 +1862,7 @@
         dom.row.style.opacity = isVisible ? '1' : '0';
         dom.row.style.pointerEvents = isVisible ? 'auto' : 'none';
 
-        if (item.isBora) {
-          const chipDom = boraChipElements.get(item.name);
-          if (chipDom) {
-            const rLabel = `#${rankNum} ${rankNum <= 8 ? '★ TOP 8' : ''}`;
-            const pLabel = `${item.displayScore} pts${item.weeklyGain > 0 ? ` (+${item.weeklyGain})` : ''}`;
-            if (chipDom.rankSpan.textContent !== rLabel) chipDom.rankSpan.textContent = rLabel;
-            if (chipDom.ptsSpan.textContent !== pLabel) chipDom.ptsSpan.textContent = pLabel;
-            chipDom.chip.style.order = String(rankNum);
-          }
-        }
+
       });
 
       isSettlingRanks = hasUnsettledBars;
